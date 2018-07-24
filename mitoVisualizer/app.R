@@ -1,65 +1,78 @@
-#
-# This is a Shiny web application for visualizing MITO results
+####### THIS IS A SHINY APPLICATION FOR VISUALIZING MITO RESULTS #######
 
+
+### LOAD PACKAGES
 library(shiny)
+library(shinythemes)
+library(plyr)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(plotly)
 library(readr)
-
-library(rgdal)
+library(DT)
 library(tmap)
 library(leaflet)
-
-# Define a value to be used to convert squared meters to squared kilometers
-my <- 1000000
-
-# Read in the zones shapefile
-zones <- readOGR("map", "zonesNew")
-
-# Define a variable to hold trip purposes
-purposes <- c("Home-based Work" = "HBW", "Home-based Eduction" = "HBE", "Home-based Shopping" = "HBS",
-              "Home-based Other" = "HBO", "Non-home-based Work" = "NHBW", "Non-home-based Other" = "NHBO", "All Purposes" = "All")
-
-# Define a variable to hold the spatial attributes
-spatial_attributes <- c("Produced Trips per Area" = "P", "Attracted Trips per Area" = "A", "Average Travel Time Budget" = "TTB", 
-                        "Average Distance Travelled" = "AvDist", "Average Time Travelled" = "AvTime")
-
-# Define a variable to hold the units to be used in the legends of map
-spatial_units <- c(" (Trips/sq.km)" = "P", " (Trips/sq.km)" = "A", " (Minutes)" = "TTB", 
-                   " (Km)" = "AvDist", " (Minutes)" = "AvTime")
-
-# Define a variable to hold the styles to be applied in defining categories for spatial data
-spatial_styles <- c("quantile" = "P", "quantile" = "A", "pretty" = "TTB", 
-                    "pretty" = "AvDist", "pretty" = "AvTime")
-
-# Define a variable to hold the aspatial attributes
-aspatial_attributes <- c("Persons by Number of Trips" = "PPbyTrips", "Households by Number of Trips" = "HHbyTrips", 
-                         "Travel Distance Distribution" = "Distance", "Travel Time Distribution" = "Time", "Mode Share" = "ModeShare")
-
-# Define a variable to hold x axis labels for aspatial attributes
-aspatial_x_labels <- c("Number of Trips" = "PPbyTrips", "Number of Trips" = "HHbyTrips", "Travel Distance (km)" = "Distance", 
-                       "Travel Time (minutes)" = "Time")
-
-# Define a variable to hold y axis labels for aspatial attributes
-aspatial_y_labels <- c("Number of Persons" = "PPbyTrips", "Number of Households" = "HHbyTrips", 
-                       "Frequency" = "Distance", "Frequency" = "Time")
+library(RColorBrewer)
+library(sf)
 
 
+### PRELIMINARY SETUP
 
-# Define the User Interface for the application
-ui <- fluidPage(
+##READ IN ZONES SHAPEFILE
+zones <- st_read("map/zonesNew.shp")
+
+
+## DEFINE VARIABLES TO USE
+myModeNames <- c("Car Driver", "Car Passenger", "Bicycle", "Bus", "Train", 
+                 "Tram/Metro", "Walk", "Private AV", "Shared AV")
+myModeCodes <- c("autoDriver", "autoPassenger", "bicycle", "bus", "train", 
+                 "tramOrMetro", "walk", "privateAV", "sharedAV")
+myYLabels <- c("Number of Persons", "Number of Households", "Frequency", "Frequency", "Mode Share")
+myXLabels <- c("Number of Trips", "Number of Trips", "Travel Distance (km)", "Travel Time (minutes)", "Mode")
+myAspatial <- c("Persons by Number of Trips", "Households by Number of Trips", "Travel Distance Distribution",
+                   "Travel Time Distribution", "Mode Share")
+myAspatialCodes <- c("PPbyTrips", "HHbyTrips", "Distance", "Time", "ModeShare")
+mySpatial <- c("Produced Trips per sq.km", "Attracted Trips per sq.km", "Average Travel Time Budget (Minutes)", 
+               "Average Distance Travelled (Km)", "Average Time Travelled (Minutes)")
+mySpatialCodes <- c("P", "A", "TTB", "AvDist", "AvTime")
+myPurposeNames <- c("Home-based Work", "Home-based Education", "Home-based Shopping", "Home-based Other",
+                    "Non-home-based Work", "Non-home-based Other")
+myPurposeCodes <- c("HBW", "HBE", "HBS", "HBO", "NHBW", "NHBO")
+mySpatialStyles <- c("quantile", "quantile", "pretty", "pretty", "pretty")
+
+
+## ASSIGN INITIAL NAMES TO VECTORS
+names(myAspatialCodes) <- myAspatial
+names(mySpatialCodes) <- mySpatial
+names(myPurposeCodes) <- myPurposeNames
+
+
+## DEFINE FUNCTION THAT RETURNS THE NAME OF THE SELECTED VARIABLE CODE
+myNaming <- function(myNames, myCodes, mySelect){
+  names(myCodes) <- myNames
+  return (names(myCodes[myCodes == mySelect]))
+}
+
+
+
+### DEFINE THE USER INTERFACE
+ui <- fluidPage(#theme = shinytheme("cerulean"),
   
-  # Application title
-  titlePanel("MITO Model Results"),
+## APPLICATION TITLE
   
-  # Sidebar for user interaction
+
+  ## SIDEBAR FOR USER INTERACTION
+  br(),
   sidebarLayout(
     
     sidebarPanel(
       
-      # Create file inputs in a well panel where result files will be uploaded
+      # PUT THE APPLICATION TITLE IN THE SIDEBAR
+      h2("MITO Results", ),
+      br(),
+
+      # CREATE INPUTS FOR UPLOADING FILES
       wellPanel(
         fileInput(inputId = "resultFile",
                   label = "Upload result file", 
@@ -69,151 +82,220 @@ ui <- fluidPage(
                   accept = ".csv")
       ),
       
-      # Create radio buttons in a well panel for selecting data type and trip purpose
+
+      # CREATE BUTTONS/INPUTS FOR SELECTING DATA TYPE AND TRIP PURPOSE
       wellPanel(
         radioButtons(inputId = "dataType", 
                      label = "What type of results do you want to display?", 
                      choices = c("Aspatial Data", "Spatial Data"), 
                      inline = TRUE),
         br(),
-        radioButtons(inputId = "purpose", 
+        selectInput(inputId = "purpose", 
                     label = "Which trip purpose are you interested in?",
-                    choices = purposes,
-                    inline = TRUE)
+                    choices = myPurposeCodes,
+                    selected = "HBW")
       ),
       
-      # Create conditional panels with buttons and inputs for selecting the attributes to display based on the data type selected
+    
+      ## CREATE CONDITIONAL PANELS WITH BUTTONS/INPUTS FOR SELECTING ATTRIBUTES TO DISPLAY BASED ON SELECTED DATA TYPE
       wellPanel(
         
-        # Define what should be displayed when Aspatial Data is selected as data type
+
+        # DEFINE WHAT SHOULD BE DISPLAYED WHEN ASPATIAL DATA IS SELECTED
         conditionalPanel("input.dataType == 'Aspatial Data'",
-                         radioButtons(inputId = "aspatialData",
-                                      label = "Which aspatial attribute do you want to display",
-                                      choices = aspatial_attributes,
-                                      selected = "ModeShare"),
+                         selectInput(inputId = "aspatialData",
+                                     label = "Which aspatial attribute do you want to display",
+                                     choices = myAspatialCodes,
+                                     selected = "ModeShare"),
+                         
                          br(),
+                         
                          radioButtons(inputId = "absRel",
                                       label = "Are you interested in counts or percentages?",
-                                      choices = c("Count" = "", "Percentage" = "s"),
-                                      inline = TRUE)
-        ),
+                                      choices = c("Count", "Percentage"),
+                                      inline = TRUE)),
         
-        # Define what should be displayed when Spatial Data is selected as data type
+        
+        # DEFINE WHAT SHOULD BE DISPLAYED WHEN SPATIAL DATA IS SELECTED
         conditionalPanel("input.dataType == 'Spatial Data'",
-                         radioButtons(inputId = "spatialData",
+                         selectInput(inputId = "spatialData",
                                      label = "Which spatial attribute do you want to display?",
-                                     choices = spatial_attributes,
+                                     choices = mySpatialCodes,
                                      selected = "P"),
+                         
                          br(),
+                         
                          sliderInput(inputId = "categories",
-                                    label = "How many categories do you want to see?",
-                                    value = 5, min = 3, max = 10)
-        )
+                                      label = "How many categories do you want?", 
+                                      value = 5, min = 3, max = 10, step = 1),
+        
+                         checkboxInput(inputId = "manualStyle",
+                                       label = "Manually define breakpoints", 
+                                       value = FALSE)),
+      
+        conditionalPanel("input.dataType == 'Spatial Data' && input.manualStyle == true",
+                         textInput(inputId = "breaks", 
+                                   label = "Enter break points between 0 and Inf", 
+                                   value = "0,Inf"))
       )
     ),
     
-    # Main panel to display maps or charts based on the selections in the sidebar panel
+
+    ## MAIN PANEL TO DISPLAY OUTPUTS
     mainPanel(
+      h3(textOutput("caption")),
+      conditionalPanel("input.dataType == 'Aspatial Data'",
+                       tabsetPanel(type = "tabs",
+                                   tabPanel("Figure",
+                                            plotlyOutput("charts", height = "800px")),
+                                   tabPanel("Data",
+                                            br(),
+                                            DT::dataTableOutput("plotTable")))),
       
-      conditionalPanel("input.dataType == 'Aspatial Data'", h3(textOutput("aspatialCaption"))),
-      conditionalPanel("input.dataType == 'Spatial Data'", h3(textOutput("spatialCaption"))),
-      br(),
-      conditionalPanel("input.dataType == 'Spatial Data'", leafletOutput("map", height = "800px")),
-      conditionalPanel("input.dataType == 'Aspatial Data' && input.aspatialData == 'ModeShare'", plotlyOutput("modalsplit", height = "800px")),
-      conditionalPanel("input.dataType == 'Aspatial Data' && input.aspatialData != 'ModeShare'", plotlyOutput("charts", height = "800px"))
-      
-    )
+      conditionalPanel("input.dataType == 'Spatial Data'",
+                       tabsetPanel(type = "tabs",
+                                   tabPanel("Figure",
+                                            leafletOutput("map", height = "800px")),
+                                   tabPanel("Data",
+                                            br(),
+                                            DT::dataTableOutput("mapTable")))))
   )
 )
 
-# Define server logic 
+
+
+### DEFINE SERVER LOGIC
 server <- function(input, output) {
   
-  # Create a reactive that holds the cleaned aspatial data
+  
+  ## DEFINING LOGIC FOR ASPATIAL DATA
+  # CREATE A REACTIVE THAT HOLDS THE CLEANED ASPATIAL DATA
   clean_aspatial <- reactive({
     req(input$resultFile)
     link <- input$resultFile
-    raw <- read_csv(link$datapath)
-    refined <- raw %>% separate(Attribute, into = c("Feature", "Alternatives"), sep = "_") %>% 
-      mutate(HBW = as.numeric(HBW), HBE = as.numeric(HBE), HBS = as.numeric(HBS), HBO = as.numeric(HBO), 
-             NHBW = as.numeric(NHBW), NHBO = as.numeric(NHBO))
-    refined[is.na(refined)] <- 0
-    refined
+    link$datapath %>% 
+      read_csv() %>% 
+      separate(Attribute, into = c("Feature", "Alternatives"), sep = "_") %>% 
+      mutate_at(vars(HBW:NHBO), funs(as.numeric)) %>% 
+      mutate_at(vars(HBW:NHBO), funs(replace_na), replace = 0) %>% 
+      group_by(Feature) %>%
+      mutate_at(vars(HBW:NHBO), funs(s = 100 * . / sum(.))) %>% 
+      ungroup() %>% 
+      mutate_at(vars(HBW_s:NHBO_s), funs(replace_na), replace = 0) %>% 
+      mutate_at(vars(HBW_s:NHBO_s), funs(round), digits = 2)
   })
   
-  # Create a reactive that holds the selected aspatial attribute to be displayed
+  # CREATE A REACTIVE THAT HOLDS THE SELECTED ASPATIAL ATTRIBUTE TO BE DISPLAYED
   plot_subset <- reactive({
-    clean_aspatial() %>% 
-      filter(Feature == input$aspatialData)
-  })
-  
-  # Create a pie chart that displays modal split
-  output$modalsplit <- renderPlotly({
-    df <- plot_subset() %>% 
-      mutate(TravelMode = recode(Alternatives, "autoDriver" = "Car Driver", "autoPassenger" = "Car Passenger", "bicycle" = "Bicylce", 
-                                         "bus" = "Bus", "train" = "Train", "tramOrMetro" = "Tram/Metro", "walk" = "Walk",
-                                         "privateAV" = "Private AV", "sharedAV" = "Shared AV"), All = HBW+HBE+HBS+HBO+NHBW+NHBO)
-    mode_colors <- c("#FF6961", "#FFB347", "#FDFD96", "#AEC6CF", "#966FD6", "#B19CD9", "#77DD77", "#836953", "#CFCFC4") 
-    df$yy <- df[[input$purpose]] 
-    plot_ly(df, labels = ~TravelMode, values = ~yy, type = 'pie', sort = FALSE, marker = list(colors = mode_colors)) %>% 
-      layout(showlegend = T,
-             xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-             yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE)
-            )
-  })
-  
-  # Create a bar chart that displays the other aspatial attributes
-  output$charts <- renderPlotly({
-    df <- plot_subset() %>% 
-      mutate(Alternatives = as.numeric(Alternatives), HBWs = 100*HBW/sum(HBW), HBEs = 100*HBE/sum(HBE), HBSs = 100*HBS/sum(HBS), HBOs = 100*HBO/sum(HBO), 
-             NHBWs = 100*NHBW/sum(NHBW), NHBOs = 100*NHBO/sum(NHBO), All = HBW+HBE+HBS+HBO+NHBW+NHBO, Alls = 100*All/sum(All))
-    trying <- toString(paste(input$purpose, input$absRel, sep = ""))
-    df$yy <- df[[trying]]
-    if(input$absRel == ""){
-      my_ytitle <- names(aspatial_y_labels[aspatial_y_labels == input$aspatialData])
-    } else if (input$absRel == "s"){
-      my_ytitle <- paste(names(aspatial_y_labels[aspatial_y_labels == input$aspatialData]), " (%)")
+    attribute <- myNaming(myXLabels, myAspatialCodes, input$aspatialData)
+    absVal <- myNaming(myYLabels, myAspatialCodes, input$aspatialData)
+    relVal <- paste(absVal, " (%)")
+    df <- clean_aspatial() %>% 
+      filter(Feature == input$aspatialData) %>%
+      select(Alternatives, input$purpose, paste(input$purpose, "_s", sep = ""))
+    if(input$aspatialData != "ModeShare"){
+      df <- mutate(df, Alternatives = as.numeric(Alternatives))
+    } else {
+      df <- mutate(df, Alternatives = mapvalues(Alternatives, from = myModeCodes, 
+                                                to = myModeNames, warn_missing = FALSE))
     }
-    plot_ly(df, y = ~yy, x = ~Alternatives, type = "bar") %>% 
-      layout(yaxis = list(title = my_ytitle),
-             xaxis = list(title = names(aspatial_x_labels[aspatial_x_labels == input$aspatialData]))
-             )
+    names(df)[1:3] <- c(attribute, absVal, relVal)
+    df
   })
   
-  # Create a reactive that holds the cleaned spatial data
+  # CREATE A TABLE THAT CONTAINS THE PLOTTED ASPATIAL DATA
+  output$plotTable <- DT::renderDataTable({
+    DT::datatable(plot_subset(), rownames = FALSE, extensions = "Buttons", 
+                  options = list(pageLength = 15, dom = "Bfrtip", buttons = c("copy", "csv", "print")))
+  })
+  
+  # CREATE A CHART THAT DISPLAYS THE ASPATIAL ATTRIBUTES
+  output$charts <- renderPlotly({
+    df <- plot_subset()
+    realNames <- colnames(df)
+    colnames(df) <- c("myAttr", "myAbs", "myRel") 
+    if(input$aspatialData == "ModeShare"){
+      plot_ly(df, labels = ~myAttr, values = ~myRel, type = 'pie', sort = FALSE, 
+              marker = list(colors = brewer.pal(9, "Pastel1"))) %>% 
+        layout(showlegend = T)
+    } else{
+      if (input$absRel == "Count"){
+        plot_ly(df, y = ~myAbs, x = ~myAttr, type = "bar") %>% 
+          layout(yaxis = list(title = realNames[2]),
+                 xaxis = list(title = realNames[1]))      
+      } else if (input$absRel == "Percentage") {
+        plot_ly(df, y = ~myRel, x = ~myAttr, type = "bar") %>% 
+          layout(yaxis = list(title = realNames[3]),
+                 xaxis = list(title = realNames[1]))
+      }      
+    }
+  })
+  
+  
+  ## DEFINING LOGIC FOR SPATIAL DATA
+  # CREATE A REACTIVE THAT HOLDS THE CLEANED SPATIAL DATA
   clean_spatial <- reactive({
     req(input$spatialResultFile)
     link <- input$spatialResultFile
-    raw <- read_csv(link$datapath) 
-    final <- merge(zones, raw, by.x = "id", by.y = "Zone", all.x = FALSE)
-    final@data <- final@data %>% 
-      mutate(AllP = my * (HBWP + HBEP + HBSP + HBOP + NHBWP + NHBOP)/Area,
-             AllA = my * (HBWA + HBEA + HBSA + HBOA + NHBWA + NHBOA)/Area,
-             HBWP = my * HBWP/Area, HBEP = my * HBEP/Area, HBSP = my * HBSP/Area, HBOP = my * HBOP/Area, NHBWP = my * NHBWP/Area, NHBOP = my * NHBOP/Area,
-             HBWA = my * HBWA/Area, HBEA = my * HBEA/Area, HBSA = my * HBSA/Area, HBOA = my * HBOA/Area, NHBWA = my * NHBWA/Area, NHBOA = my * NHBOA/Area)
-    final
+    link$datapath %>%  
+      read_csv() %>% 
+      right_join(zones, by = c("Zone" = "id")) %>%
+      mutate(AllP = sum(c(HBWA, HBEA, HBSA, HBOA, NHBWA, NHBOA)),
+             AllA = sum(c(HBWA, HBEA, HBSA, HBOA, NHBWA, NHBOA))) %>% 
+      mutate_at(paste0(myPurposeCodes, "P"), funs(1000000 * . / Area)) %>% 
+      mutate_at(paste0(myPurposeCodes, "A"), funs(1000000 * . / Area)) %>% 
+      mutate_at(paste0(myPurposeCodes, "P"), funs(round)) %>% 
+      mutate_at(paste0(myPurposeCodes, "A"), funs(round)) %>% 
+      st_sf()
   })
   
-  # Create a map that displays spatial attributes
+  # CREATE A REACTIVE THAT HOLDS THE SELECTED SPATIAL ATTRIBUTE TO BE DISPLAYED
+  map_subset <- reactive({
+    attribute <- paste0(input$purpose, input$spatialData)
+    df <- clean_spatial() %>% 
+      select(Zone, attribute, geometry)
+    df
+  })
+  
+  # CREATE A TABLE THAT CONTAINS THE PLOTTED SPATIAL DATA
+  output$mapTable <- DT::renderDataTable({
+    df <- map_subset() %>%
+      st_set_geometry(NULL)
+    names(df)[2] <- myNaming(mySpatial, mySpatialCodes, input$spatialData)
+    DT::datatable(df, rownames = FALSE, extensions = "Buttons", 
+                  options = list(pageLength = 15, dom = "Bfrtip", buttons = c("copy", "csv", "print")))
+  })
+  
+  # CREATE A MAP THAT DISPLAYS SPATIAL ATTRIBUTES
   output$map <- renderLeaflet({
-    myAttribute <- toString(paste(input$purpose, input$spatialData, sep = ""))
-    tmap_leaflet(tm_shape(clean_spatial()) +
-                   tm_fill(myAttribute, title = paste(names(spatial_attributes[spatial_attributes == input$spatialData]), 
-                                                   names(spatial_units[spatial_units == input$spatialData])), 
-                           style = names(spatial_styles[spatial_styles == input$spatialData]), n = input$categories)
-      )
+    df <- map_subset()
+    myAttribute <- names(df)[2]
+    if(input$manualStyle == FALSE){
+      myStyle <- myNaming(mySpatialStyles, mySpatialCodes, input$spatialData)
+      myBreak <- NULL
+    } else {
+      myStyle <- "fixed"
+      myBreak <- as.numeric(unlist(strsplit(input$breaks, ",")))
+    }
+    tmap_leaflet(tm_shape(df) +
+                   tm_fill(myAttribute,
+                           title = myNaming(mySpatial, mySpatialCodes, input$spatialData),
+                           style = myStyle, breaks = myBreak, n = input$categories))
   })
   
-  # Create a caption for spatial attributes
-  output$spatialCaption <- renderText({
-    paste(names(spatial_attributes[spatial_attributes == input$spatialData]), " for ", names(purposes[purposes == input$purpose]), " Trips")
+  # CREATE A CAPTION FOR THE DISPLAYED DATA
+  output$caption <- renderText({
+    if(input$dataType == "Aspatial Data"){
+      paste(myNaming(myAspatial, myAspatialCodes, input$aspatialData), " for ", 
+            myNaming(myPurposeNames, myPurposeCodes, input$purpose), " Trips")
+    } else if(input$dataType == "Spatial Data"){
+      paste(myNaming(mySpatial, mySpatialCodes, input$spatialData), " for ",
+            myNaming(myPurposeNames, myPurposeCodes, input$purpose), " Trips")
+    }
   })
-  
-  # Create a caption for aspatial attributes
-  output$aspatialCaption <- renderText({
-    paste(names(aspatial_attributes[aspatial_attributes == input$aspatialData]), " for ", names(purposes[purposes == input$purpose]), " Trips")
-  })  
 }
 
-# Run the application 
+
+
+### RUN THE APPLICATION
 shinyApp(ui = ui, server = server)
