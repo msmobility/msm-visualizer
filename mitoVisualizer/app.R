@@ -69,20 +69,25 @@ ui <- fluidPage(#theme = shinytheme("cerulean"),
     sidebarPanel(
       
       # PUT THE APPLICATION TITLE IN THE SIDEBAR
-      h2("MITO Results", ),
+      h2("MITO Results"),
       br(),
 
       # CREATE INPUTS FOR UPLOADING FILES
       wellPanel(
-        fileInput(inputId = "resultFile",
-                  label = "Upload result file", 
+        fileInput(inputId = "resultFiles",
+                  label = "Upload result files", 
+                  multiple = TRUE,
                   accept = ".csv"),
-        fileInput(inputId = "spatialResultFile", 
-                  label = "Upload spatial result file", 
-                  accept = ".csv")
+        checkboxInput(inputId = "scenario",
+                      label = "Compare scenarios", 
+                      value = FALSE),
+        conditionalPanel("input.scenario == true",
+                         fileInput(inputId = "scenarioFiles", 
+                                   label = "Upload result files from comparison scenario",
+                                   multiple = TRUE,
+                                   accept = ".csv"))
       ),
       
-
       # CREATE BUTTONS/INPUTS FOR SELECTING DATA TYPE AND TRIP PURPOSE
       wellPanel(
         radioButtons(inputId = "dataType", 
@@ -99,7 +104,6 @@ ui <- fluidPage(#theme = shinytheme("cerulean"),
     
       ## CREATE CONDITIONAL PANELS WITH BUTTONS/INPUTS FOR SELECTING ATTRIBUTES TO DISPLAY BASED ON SELECTED DATA TYPE
       wellPanel(
-        
 
         # DEFINE WHAT SHOULD BE DISPLAYED WHEN ASPATIAL DATA IS SELECTED
         conditionalPanel("input.dataType == 'Aspatial Data'",
@@ -107,14 +111,11 @@ ui <- fluidPage(#theme = shinytheme("cerulean"),
                                      label = "Which aspatial attribute do you want to display",
                                      choices = myAspatialCodes,
                                      selected = "ModeShare"),
-                         
                          br(),
-                         
                          radioButtons(inputId = "absRel",
                                       label = "Are you interested in counts or percentages?",
                                       choices = c("Count", "Percentage"),
                                       inline = TRUE)),
-        
         
         # DEFINE WHAT SHOULD BE DISPLAYED WHEN SPATIAL DATA IS SELECTED
         conditionalPanel("input.dataType == 'Spatial Data'",
@@ -122,17 +123,13 @@ ui <- fluidPage(#theme = shinytheme("cerulean"),
                                      label = "Which spatial attribute do you want to display?",
                                      choices = mySpatialCodes,
                                      selected = "P"),
-                         
                          br(),
-                         
                          sliderInput(inputId = "categories",
                                       label = "How many categories do you want?", 
                                       value = 5, min = 3, max = 10, step = 1),
-        
                          checkboxInput(inputId = "manualStyle",
                                        label = "Manually define breakpoints", 
                                        value = FALSE)),
-      
         conditionalPanel("input.dataType == 'Spatial Data' && input.manualStyle == true",
                          textInput(inputId = "breaks", 
                                    label = "Enter break points between 0 and Inf", 
@@ -151,7 +148,6 @@ ui <- fluidPage(#theme = shinytheme("cerulean"),
                                    tabPanel("Data",
                                             br(),
                                             DT::dataTableOutput("plotTable")))),
-      
       conditionalPanel("input.dataType == 'Spatial Data'",
                        tabsetPanel(type = "tabs",
                                    tabPanel("Figure",
@@ -171,9 +167,29 @@ server <- function(input, output) {
   ## DEFINING LOGIC FOR ASPATIAL DATA
   # CREATE A REACTIVE THAT HOLDS THE CLEANED ASPATIAL DATA
   clean_aspatial <- reactive({
-    req(input$resultFile)
-    link <- input$resultFile
-    link$datapath %>% 
+    req(input$resultFiles)
+    myFiles <- input$resultFiles %>% 
+      arrange(size)
+    link <- myFiles$datapath[1] 
+    link %>% 
+      read_csv() %>% 
+      separate(Attribute, into = c("Feature", "Alternatives"), sep = "_") %>% 
+      mutate_at(vars(HBW:NHBO), funs(as.numeric)) %>% 
+      mutate_at(vars(HBW:NHBO), funs(replace_na), replace = 0) %>% 
+      group_by(Feature) %>%
+      mutate_at(vars(HBW:NHBO), funs(s = 100 * . / sum(.))) %>% 
+      ungroup() %>% 
+      mutate_at(vars(HBW_s:NHBO_s), funs(replace_na), replace = 0) %>% 
+      mutate_at(vars(HBW_s:NHBO_s), funs(round), digits = 2)
+  })
+  
+  # CREATE A REACTIVE THAT HOLDS THE CLEANED ASPATIAL DATA OF THE COMPARISON SCENARIO
+  clean_aspatial2 <- reactive({
+    req(input$scenarioFiles)
+    myFiles <- input$scenarioFiles %>% 
+      arrange(size)
+    link <- myFiles$datapath[1] 
+    link %>% 
       read_csv() %>% 
       separate(Attribute, into = c("Feature", "Alternatives"), sep = "_") %>% 
       mutate_at(vars(HBW:NHBO), funs(as.numeric)) %>% 
@@ -203,28 +219,60 @@ server <- function(input, output) {
     df
   })
   
+  # CREATE A REACTIVE THAT HOLDS THE SELECTED ASPATIAL ATTRIBUTE FROM BOTH SCENARIOS
+  plot_subset2 <- reactive({
+    attribute <- myNaming(myXLabels, myAspatialCodes, input$aspatialData)
+    absVal <- myNaming(myYLabels, myAspatialCodes, input$aspatialData)
+    relVal <- paste(absVal, " (%)")
+    df <- clean_aspatial2() %>% 
+      filter(Feature == input$aspatialData) %>%
+      select(Alternatives, input$purpose, paste(input$purpose, "_s", sep = ""))
+    if(input$aspatialData != "ModeShare"){
+      df <- mutate(df, Alternatives = as.numeric(Alternatives))
+    } else {
+      df <- mutate(df, Alternatives = mapvalues(Alternatives, from = myModeCodes, 
+                                                to = myModeNames, warn_missing = FALSE))
+    }
+    names(df)[1:3] <- c(attribute, absVal, relVal)
+    df <- left_join(plot_subset(), df, by = attribute, suffix = c(" (Base)", " (Comparison)")) %>% 
+      mutate(Difference = .[[4]] - .[[2]], `Difference (%)` = round(.[[5]] - .[[3]], digits = 2))
+    df
+  })
+  
   # CREATE A TABLE THAT CONTAINS THE PLOTTED ASPATIAL DATA
   output$plotTable <- DT::renderDataTable({
-    DT::datatable(plot_subset(), rownames = FALSE, extensions = "Buttons", 
+    if (input$scenario == FALSE){
+      df <- plot_subset()
+    } else {
+      df <- plot_subset2()
+    }
+    DT::datatable(df, rownames = FALSE, extensions = "Buttons", 
                   options = list(pageLength = 15, dom = "Bfrtip", buttons = c("copy", "csv", "print")))
   })
   
   # CREATE A CHART THAT DISPLAYS THE ASPATIAL ATTRIBUTES
   output$charts <- renderPlotly({
-    df <- plot_subset()
-    realNames <- colnames(df)
-    colnames(df) <- c("myAttr", "myAbs", "myRel") 
-    if(input$aspatialData == "ModeShare"){
+    if (input$scenario == FALSE){
+      df <- plot_subset()
+    } else {
+      df <- plot_subset2() %>% 
+        select(1, 6, 7)
+    }
+    realNames <- colnames(df)      
+    colnames(df) <- c("myAttr", "myAbs", "myRel")    
+    if(input$aspatialData == "ModeShare" & input$scenario == FALSE){
       plot_ly(df, labels = ~myAttr, values = ~myRel, type = 'pie', sort = FALSE, 
               marker = list(colors = brewer.pal(9, "Pastel1"))) %>% 
         layout(showlegend = T)
     } else{
       if (input$absRel == "Count"){
-        plot_ly(df, y = ~myAbs, x = ~myAttr, type = "bar") %>% 
+        df <- mutate(df, myColor = ifelse(myAbs < 0, "#fbb4ae", "#ccebc5"))
+        plot_ly(df, y = ~myAbs, x = ~myAttr, type = "bar", mode = "markers", color = ~I(myColor)) %>% 
           layout(yaxis = list(title = realNames[2]),
                  xaxis = list(title = realNames[1]))      
       } else if (input$absRel == "Percentage") {
-        plot_ly(df, y = ~myRel, x = ~myAttr, type = "bar") %>% 
+        df <- mutate(df, myColor = ifelse(myRel < 0, "#fbb4ae", "#ccebc5"))
+        plot_ly(df, y = ~myRel, x = ~myAttr, type = "bar", mode = "markers", color = ~I(myColor)) %>% 
           layout(yaxis = list(title = realNames[3]),
                  xaxis = list(title = realNames[1]))
       }      
@@ -235,11 +283,39 @@ server <- function(input, output) {
   ## DEFINING LOGIC FOR SPATIAL DATA
   # CREATE A REACTIVE THAT HOLDS THE CLEANED SPATIAL DATA
   clean_spatial <- reactive({
-    req(input$spatialResultFile)
-    link <- input$spatialResultFile
-    link$datapath %>%  
+    req(input$resultFiles)
+    myFiles <- input$resultFiles %>% 
+      arrange(size)
+    if(nrow(myFiles) > 1){
+      link <- myFiles$datapath[2]
+    } else {
+      link <- myFiles$datapath[1]
+    }
+    link %>%  
       read_csv() %>% 
-      right_join(zones, by = c("Zone" = "id")) %>%
+      inner_join(zones, by = c("Zone" = "id")) %>%
+      mutate(AllP = sum(c(HBWA, HBEA, HBSA, HBOA, NHBWA, NHBOA)),
+             AllA = sum(c(HBWA, HBEA, HBSA, HBOA, NHBWA, NHBOA))) %>% 
+      mutate_at(paste0(myPurposeCodes, "P"), funs(1000000 * . / Area)) %>% 
+      mutate_at(paste0(myPurposeCodes, "A"), funs(1000000 * . / Area)) %>% 
+      mutate_at(paste0(myPurposeCodes, "P"), funs(round)) %>% 
+      mutate_at(paste0(myPurposeCodes, "A"), funs(round)) %>% 
+      st_sf()
+  })
+  
+  # CREATE A REACTIVE THAT HOLDS THE CLEANED SPATIAL DATA OF THE COMPARISON SCENARIO
+  clean_spatial2 <- reactive({
+    req(input$scenarioFiles)
+    myFiles <- input$scenarioFiles %>% 
+      arrange(size)
+    if(nrow(myFiles) > 1){
+      link <- myFiles$datapath[2]
+    } else {
+      link <- myFiles$datapath[1]
+    }
+    link %>%  
+      read_csv() %>% 
+      inner_join(zones, by = c("Zone" = "id")) %>%
       mutate(AllP = sum(c(HBWA, HBEA, HBSA, HBOA, NHBWA, NHBOA)),
              AllA = sum(c(HBWA, HBEA, HBSA, HBOA, NHBWA, NHBOA))) %>% 
       mutate_at(paste0(myPurposeCodes, "P"), funs(1000000 * . / Area)) %>% 
@@ -254,22 +330,48 @@ server <- function(input, output) {
     attribute <- paste0(input$purpose, input$spatialData)
     df <- clean_spatial() %>% 
       select(Zone, attribute, geometry)
+    df[[2]] = round(df[[2]], digits = 2)
+    df
+  })
+  
+  # CREATE A REACTIVE THAT HOLDS THE SELECTED SPATIAL ATTRIBUTE FROM BOTH SCENARIOS
+  map_subset2 <- reactive({
+    attribute <- paste0(input$purpose, input$spatialData)
+    df <- clean_spatial2() %>% 
+      st_set_geometry(NULL) %>% 
+      select(Zone, attribute) 
+    df[[2]] = round(df[[2]], digits = 2)
+    df <- left_join(map_subset(), df, by = "Zone") %>% 
+      mutate(Difference = .[[3]] - .[[2]])
     df
   })
   
   # CREATE A TABLE THAT CONTAINS THE PLOTTED SPATIAL DATA
   output$mapTable <- DT::renderDataTable({
-    df <- map_subset() %>%
+    myAttribute <- myNaming(mySpatial, mySpatialCodes, input$spatialData)
+    if (input$scenario == FALSE){
+      df <- map_subset() 
+      names(df)[2] <- myAttribute
+    } else {
+      df <- map_subset2()
+      names(df)[2] <- paste(myAttribute, " (Base)")
+      names(df)[3] <- paste(myAttribute, " (Comparison)")
+    }
+    df <- df %>%
       st_set_geometry(NULL)
-    names(df)[2] <- myNaming(mySpatial, mySpatialCodes, input$spatialData)
     DT::datatable(df, rownames = FALSE, extensions = "Buttons", 
                   options = list(pageLength = 15, dom = "Bfrtip", buttons = c("copy", "csv", "print")))
   })
   
   # CREATE A MAP THAT DISPLAYS SPATIAL ATTRIBUTES
   output$map <- renderLeaflet({
-    df <- map_subset()
-    myAttribute <- names(df)[2]
+    if (input$scenario == FALSE) {
+      df <- map_subset()
+      myAttribute <- names(df)[2]
+    } else {
+      df <- map_subset2()
+      myAttribute <- names(df)[4]
+    }
     if(input$manualStyle == FALSE){
       myStyle <- myNaming(mySpatialStyles, mySpatialCodes, input$spatialData)
       myBreak <- NULL
