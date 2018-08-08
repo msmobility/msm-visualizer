@@ -1,0 +1,55 @@
+---
+title: "MiTO Visualizer"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r include=FALSE} 
+#{r global, include=FALSE}
+library(flexdashboard)
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(plotly)
+library(readr)
+library(DT)
+library(tmap)
+library(leaflet)
+library(RColorBrewer)
+library(sf)
+
+source('mitoSidebarUI.R', local = TRUE)
+
+##READ IN ZONES SHAPEFILE
+zones <- st_read("../map/zonesNew.shp")
+
+```
+
+
+Column {.sidebar data-width=300}
+-----------------------------------------------------------------------
+### User Input
+
+```{r}
+# CREATE INPUTS FOR UPLOADING FILES
+mitoFilesUI
+mitoAttributeSelectorUI
+mitoDetailedSelectorUI
+
+```
+
+Column {data-width=900 .tabset}
+-----------------------------------------------------------------------
+
+```{r}
+source('mitoSpatialServer.R', local = TRUE)
+source('mitoAspatialServer.R', local = TRUE)
+source('mitoOutput.R', local = TRUE)
+
+# Show figure and table
+mitoOutputs
+
+```
