@@ -13,8 +13,7 @@ msmMap <- function(data, myAttribute, myColors, myTitle, myLegend, myStyle, cate
   tmap_leaflet(tm_shape(data()) +
                  tm_fill(myAttribute,
                          palette = myColors, title = myLegend,
-                         style = myStyle, n = categories) + tm_layout(myTitle)) %>%
-    setView(11.51416, 48.348645, zoom = 8.5)
+                         style = myStyle, n = categories) + tm_layout(myTitle))
 }
 
 

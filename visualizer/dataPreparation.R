@@ -62,15 +62,26 @@ siloSpatialCleaner <- function(data){
     dfName <- unlist(strsplit(as.character(df[2, 1]), split = ","))
     
     # fill all empty rows with the non-NA value preceding it in the same column (assign Year attribute to all rows)
+    
+    
+    
+    
     df <- na.locf(df) %>% 
       mutate(Year = as.numeric(X2)) %>% 
       filter(!str_detect(X1, "Year")) %>% 
-      
       # separate first column (X1) which is comma-separated into multiple columns
-      separate(X1, into = dfName, sep = ",") %>%
-      mutate(Zone = Year2011) %>% 
-      select(- Year2011) %>% 
-      mutate_all(funs(as.numeric))
+      separate(X1, into = dfName, sep = ",")
+      #mutate(Zone := Year2000) %>% 
+      #select(- Year2000) %>% 
+      #mutate_all(funs(as.numeric))
+    
+    #dpplyr does not accept dynamic variable names (according to my limited knowledge), so I use normal R code
+    #to remove the column named "Year_BASE_YEAR"
+    aux_var_name = paste("Year", base_year, sep ="")
+    df[["Zone"]] = df[[aux_var_name]] 
+    df = df[,!(names(df) %in% c(aux_var_name))]
+    df = df %>% mutate_all(funs(as.numeric))
+      
     df
   })
 }
@@ -109,19 +120,19 @@ mitoSpatialCleaner <- function(data, zoneLevel){
       df <- data()[["data"]]
     }
     zonesData <- zones %>% 
-      select(id, AGS, Area)
+      select(shp_id, shp_muni, shp_area)
     df <- df %>%
-      inner_join(zonesData, by = c("Zone" = "id")) 
+      inner_join(zonesData, by = c("Zone" = "shp_id")) 
     
     # for visualizing at the gemeinde level
     if (zoneLevel == FALSE){
       df <- df %>%
-        group_by(AGS) %>%
+        group_by(shp_muni) %>%
         st_sf()
       
       # create table for attributes to be summarized by sum
       df1 <- df %>%
-        summarize_at(c(paste0(mitoPurposes, "P"), paste0(mitoPurposes, "A"), "Area"),
+        summarize_at(c(paste0(mitoPurposes, "P"), paste0(mitoPurposes, "A"), "shp_area"),
                      funs(sum), na.rm = TRUE) %>%
         ungroup()
       
@@ -133,11 +144,11 @@ mitoSpatialCleaner <- function(data, zoneLevel){
         st_set_geometry(NULL)
       
       # merge the two tables
-      df <- inner_join(df1, df2, by = "AGS")
+      df <- inner_join(df1, df2, by = "shp_muni")
     }
     df <- df %>% 
-      mutate_at(paste0(mitoPurposes, "P"), funs(1000000 * . / Area)) %>% 
-      mutate_at(paste0(mitoPurposes, "A"), funs(1000000 * . / Area)) %>% 
+      mutate_at(paste0(mitoPurposes, "P"), funs(1000000 * . / shp_area)) %>% 
+      mutate_at(paste0(mitoPurposes, "A"), funs(1000000 * . / shp_area)) %>% 
       mutate_at(paste0(mitoPurposes, "P"), funs(round)) %>% 
       mutate_at(paste0(mitoPurposes, "A"), funs(round)) %>% 
       st_sf()
