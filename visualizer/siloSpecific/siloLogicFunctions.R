@@ -4,14 +4,14 @@
 siloSpatialSelector <- function(myData, zoneLevel, myAttribute, myYear){
   reactive({
     zonesData <- zones %>% 
-      select(id, AGS, Area)
+      select(ID, PUMA, AREA_SQMI)
     df <- myData() %>% 
       select(Zone, Year, myAttribute) %>% 
       filter(Year == myYear) %>% 
-      inner_join(zonesData, by = c("Zone" = "id"))
+      inner_join(zonesData, by = c("Zone" = "ID"))
     if(zoneLevel == FALSE){
       df <- df %>% 
-        group_by(AGS) %>% 
+        group_by(PUMA) %>% 
         st_sf()
       if(myAttribute %in% c(siloAccessibilities, "avePrice")){
         df <- df %>% 
@@ -19,10 +19,10 @@ siloSpatialSelector <- function(myData, zoneLevel, myAttribute, myYear){
           ungroup()
       } else {
         df <- df %>% 
-          summarize_at(myAttribute, funs(1000000 * sum(.) / sum(Area))) %>% 
+          summarize_at(myAttribute, funs(1000000 * sum(.) / sum(AREA_SQMI))) %>% 
           ungroup()
       }
-      df <- df %>% select(Cell = AGS, myAttribute, geometry)
+      df <- df %>% select(Cell = PUMA, myAttribute, geometry)
     } else {
       df <- df %>% select(Cell = Zone, myAttribute, geometry) %>% 
         st_sf()

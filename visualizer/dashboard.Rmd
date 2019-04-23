@@ -49,12 +49,13 @@ msmPastel <- brewer.pal(9, "Pastel1") #colors used for pie chart
 
 
 # read in zones shapefile and labels file
-zones <- st_read("../map/zonesNew.shp") #zone file needed for spatial representation
+#zones <- st_read("../map/zonesNew.shp")
+zones <- st_read("../map/Non_external.shp") #zone file needed for spatial representation
 myLabels <- read_excel("visualizerLabels.xlsx") # labels file for appropriate labeling of plots
 
 ```
 
-SILO
+ySILO
 =======================================================================
 
 Column {.sidebar data-width=400}
