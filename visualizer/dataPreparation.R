@@ -68,8 +68,8 @@ siloSpatialCleaner <- function(data){
       
       # separate first column (X1) which is comma-separated into multiple columns
       separate(X1, into = dfName, sep = ",") %>%
-      mutate(Zone = Year2017) %>% 
-      select(- Year2017) %>% 
+      mutate(Zone = Year2013) %>% 
+      select(- Year2013) %>% 
       mutate_all(funs(as.numeric))
     df
   })

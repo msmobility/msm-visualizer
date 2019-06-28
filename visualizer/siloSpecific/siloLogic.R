@@ -14,11 +14,11 @@ siloMapSubset <- reactive({
   ssBaseFile <- callModule(fileReader, "siloBaseResults", model = "silo")
   ssBaseData <- siloSpatialCleaner(ssBaseFile)
   ssBaseSelected <- siloSpatialSelector(ssBaseData, input$siloZone, ssAttribute, input$siloYear)
-  ssBaseGrowthBase <- siloSpatialSelector(ssBaseData, input$siloZone, ssAttribute, 2011)
+  ssBaseGrowthBase <- siloSpatialSelector(ssBaseData, input$siloZone, ssAttribute, 2013)
   ssComparisonFile <- callModule(fileReader, "siloComparisonResults", model = "silo")
   ssComparisonData <- siloSpatialCleaner(ssComparisonFile)
   ssComparisonSelected <- siloSpatialSelector(ssComparisonData, input$siloZone, ssAttribute, input$siloYear)
-  ssComparisonGrowthBase <- siloSpatialSelector(ssComparisonData, input$siloZone, ssAttribute, 2011)
+  ssComparisonGrowthBase <- siloSpatialSelector(ssComparisonData, input$siloZone, ssAttribute, 2013)
   
   ssSelected <- ssBaseSelected
   # for comparison between two datasets

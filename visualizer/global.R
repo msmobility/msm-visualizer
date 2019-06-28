@@ -47,7 +47,7 @@ siloDwellings <- c("dd_SFD", "dd_SFA", "dd_MF234", "dd_MF5plus", "dd_MH")
 names(siloDwellings) <- c("Single family detached", "Single family attached", "Multi-family <= 4 floors",
                           "Multi-family > 4 floors")
 
-siloIncomeClasses <- c("hhInc_<20000", "hhInc_>20000", "hhInc_>40000", "hhInc_>60000")
+siloIncomeClasses <- c("hhInc_<40000", "hhInc_>40000", "hhInc_>80000", "hhInc_>120000")
 names(siloIncomeClasses) <- c("Income < 20K", "Income > 20K", "Income > 40K", "Income > 60K")
 
 siloAccessibilities <- c("autoAccessibility", "transitAccessibility")

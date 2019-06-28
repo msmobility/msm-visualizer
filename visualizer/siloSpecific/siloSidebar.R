@@ -16,7 +16,7 @@ siloDataTypeSelectorPanel <- wellPanel(
                    checkboxInput(inputId = "siloZone", label = "View at zone level", value = FALSE),
                    sliderInput(inputId = "siloYear",
                                label = "Select year",
-                               min = 2017, max = 2040, value = 2017, step = 1, sep = "",
+                               min = 2013, max = 2040, value = 2013, step = 1, sep = "",
                                animate = animationOptions(interval = 5000, loop = FALSE)))
 ) 
 

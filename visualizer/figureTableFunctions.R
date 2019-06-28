@@ -39,13 +39,13 @@ msmPieChart <- function(data, myColors){
 
 # function to create line charts (general)
 msmSimpleLines <- function(data, myColors){
-  plot_ly(data(), x = ~Year, y = ~Value, type = "scatter", mode = "lines", color = ~as.factor(Key), colors = myColors)
+  plot_ly(data(), x = ~Year, y = ~Value, type = "scatter", mode = "lines", color = ~as.factor(Key), colors = myColors, line = list(width = 5))
 }
 
 
 # function to create line charts (specific to the silo summary plot)
 msmOverviewLines <- function(data, myColors){
-  plot_ly(data(), x = ~Year, y = ~Value, type = "scatter", mode = "lines", color = ~as.factor(Key), colors = msmQualitative[c(6,4,3,11,8)])
+  plot_ly(data(), x = ~Year, y = ~Value, type = "scatter", mode = "lines", color = ~as.factor(Key), colors = msmQualitative[c(6,4,3,11,8)], line = list(width = 5))
 }
 
 
@@ -53,10 +53,10 @@ msmOverviewLines <- function(data, myColors){
 msmAnimatedLines <- function(data, myColors, switchView){
   if (switchView == FALSE){
     plot_ly(data(), x = ~Year, y = ~Value, frame = ~Key2, type = "scatter", mode = "lines", color = ~as.factor(Key),
-            colors = myColors, line = list(simplify = F))
+            colors = myColors, line = list(simplify = F), line = list(width = 5))
   } else {
     plot_ly(data(), x = ~Year, y = ~Value, frame = ~Key, type = "scatter", mode = "lines", color = ~as.factor(Key2),
-            colors = myColors, line = list(simplify = F))
+            colors = myColors, line = list(simplify = F), line = list(width = 5))
   }
 }
 
@@ -87,7 +87,7 @@ msmAnimatedBars <- function(data, myColors){
 # function to create animated line charts (specific to population pyramid values)
 msmPyramidLines <- function(data, myColors){
   plot_ly(data(), x = ~as.numeric(Key2), y = ~Value, frame = ~Year, type = "scatter", mode = "lines", color = ~as.factor(Key),
-          colors = myColors, line = list(simplify = F))
+          colors = myColors, line = list(simplify = F), line = list(width = 5))
 }
 
 
@@ -95,7 +95,7 @@ msmPyramidLines <- function(data, myColors){
 msmDummyLines <- function(data){
   myDummy <- n_distinct(data()$Key)
   myColor <- colorRampPalette(msmQualitative)(myDummy)
-  plot_ly(data(), x = ~Year, y = ~Value, type = "scatter", mode = "lines", color = ~as.factor(Key), colors = myColor)
+  plot_ly(data(), x = ~Year, y = ~Value, type = "scatter", mode = "lines", color = ~as.factor(Key), colors = myColor, line = list(width = 5))
 }
 
 
@@ -105,11 +105,11 @@ msmAnimatedDummyLines <- function(data, switchView){
     myDummy <- n_distinct(data()$Key)
     myColor <- colorRampPalette(msmQualitative)(myDummy)
     plot_ly(data(), x = ~Year, y = ~Value, frame = ~Key2, type = "scatter", mode = "lines", color = ~as.factor(Key),
-            colors = myColor, line = list(simplify = F))
+            colors = myColor, line = list(simplify = F, width = 5))
   } else {
     myDummy <- n_distinct(data()$Key2)
     myColor <- colorRampPalette(msmQualitative)(myDummy)
     plot_ly(data(), x = ~Year, y = ~Value, frame = ~Key, type = "scatter", mode = "lines", color = ~as.factor(Key2),
-            colors = myColor, line = list(simplify = F))
+            colors = myColor, line = list(simplify = F, width = 5))
   }
 }
