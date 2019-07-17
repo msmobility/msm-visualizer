@@ -15,7 +15,7 @@ runtime: shiny
 # increase the size limit of uploaded files
 options(shiny.maxRequestSize = 30*1024^2)
 
-default_implementation = "kgw"
+default_implementation = "muc"
 #choose between mstm or muc or kgw
 
 parameters_muc = list(zone_filename = "../map/muc/zones_31468.shp",
@@ -29,7 +29,12 @@ parameters_kgw = list(zone_filename = "../map/kgw/zones_KGW.shp",
                        base_year = 2011,
                        final_year = 2020)
 
-parameters = list(muc = parameters_muc, mstm = parameters_mstm, kgw=parameters_kgw)
+parameters_ct = list(zone_filename = "../map/ct/zones_ct.shp",
+                       base_year = 2011,
+                       final_year = 2040)
+
+
+parameters = list(muc = parameters_muc, mstm = parameters_mstm, kgw=parameters_kgw, ct = parameters_ct)
 
 
 
@@ -39,7 +44,7 @@ base_year = parameters[[default_implementation]]$base_year
 final_year = parameters[[default_implementation]]$final_year
 
 # load required libraries
-library(flexdashboard)
+
 library(readr) #for reading in data
 library(readxl) #for reading excel files
 library(sf) #for handling spatial data
