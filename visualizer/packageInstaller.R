@@ -14,3 +14,5 @@ install.packages("viridis") #for picking colors
 install.packages("RColorBrewer") #for picking colors
 install.packages("stringr")
 install.packages("flexdashboard")
+install.packages("rmarkdown")
+

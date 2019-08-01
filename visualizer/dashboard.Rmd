@@ -26,7 +26,7 @@ parameters_mstm = list(zone_filename = "../map/mstm/zones_mstm_100026_clean.shp"
                        final_year = 2005)
 
 parameters_kgw = list(zone_filename = "../map/kgw/zones_KGW.shp",
-                       base_year = 2011,
+                       base_year = 2010,
                        final_year = 2020)
 
 parameters_ct = list(zone_filename = "../map/ct/zones_ct.shp",
@@ -59,7 +59,7 @@ library(tmap) #for producing maps
 library(leaflet) #for producing interactive maps
 library(viridis) #for picking colors
 library(RColorBrewer) #for picking colors
-
+library(bit64)
 
 # source required files
 source("fileReader.R", local = TRUE) #contains module for reading files
