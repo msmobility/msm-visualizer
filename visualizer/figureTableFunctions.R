@@ -11,9 +11,10 @@ msmDataTable <- function(data){
 # function to create map
 msmMap <- function(data, myAttribute, myColors, myTitle, myLegend, myStyle, categories){
   tmap_leaflet(tm_shape(data()) +
-                 tm_fill(myAttribute,
-                         palette = myColors, title = myLegend,
-                         style = myStyle, n = categories) + tm_layout(myTitle))
+                 tm_polygons(myAttribute,
+                 palette = myColors, title = myLegend,
+                 style = myStyle, n = categories, border.alpha = 0) +
+    tm_layout(myTitle))
 }
 
 
