@@ -90,7 +90,7 @@ output$siloMap <- renderLeaflet({
     attribute <- names(siloMapSubset())[2]
     farbe <- "YlOrBr"
   } else {
-    attribute <- names(siloMapSubset())[4]
+    attribute <- "Change"
     farbe <- "-RdBu"
   }
   if (input$siloSpatialLevel == "dwellings"){
