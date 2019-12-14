@@ -205,13 +205,19 @@ siloJoinAspatial <- function(myData1, myData2){
 
 
 # function for joining two silo spatial data frames for comparison
-siloJoinSpatial <- function(myData1, myData2){
+siloJoinSpatial <- function(myData1, myData2, zoneLevel){
   reactive({
     myDataA = myData1() %>% select(1:2)
     myDataB = myData2() %>% select(1:2)
     myDataB = st_drop_geometry(myDataB)
-    df <- left_join(myDataA, myDataB, by = "shp_muni", suffix = c("_base", "_comparison"))
+    if(zoneLevel == TRUE){
+      df <- left_join(myDataA, myDataB, by = "Zone", suffix = c("_base", "_comparison"))
+    } else {
+      df <- left_join(myDataA, myDataB, by = "shp_muni", suffix = c("_base", "_comparison"))
+    }
+    
     df = df %>% mutate(Change = 100 *  (.[[4]] - .[[2]]) / .[[2]])
+    df$Change[is.infinite(df$Change)] = NA
     df
   })
 }

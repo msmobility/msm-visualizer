@@ -25,7 +25,7 @@ parameters_mstm = list(zone_filename = "../map/mstm/zones_mstm_100026_clean.shp"
                        base_year = 2000,
                        final_year = 2005)
 
-parameters_kgw = list(zone_filename = "../map/kgw/zones_KGW.shp",
+parameters_kgw = list(zone_filename = "../map/kgw/zones_KGW_with_aggr.shp",
                        base_year = 2010,
                        final_year = 2050)
 

@@ -23,9 +23,9 @@ siloMapSubset <- reactive({
   ssSelected <- ssBaseSelected
   # for comparison between two datasets
   if(input$siloGrowth == TRUE & input$siloScenario == FALSE){
-    ssSelected <- siloJoinSpatial(ssBaseGrowthBase, ssBaseSelected)
+    ssSelected <- siloJoinSpatial(ssBaseGrowthBase, ssBaseSelected, input$siloZone)
   } else if (input$siloScenario == TRUE){
-    ssSelected <- siloJoinSpatial(ssBaseSelected, ssComparisonSelected)
+    ssSelected <- siloJoinSpatial(ssBaseSelected, ssComparisonSelected, input$siloZone)
   }
   ssSelected()
 })
