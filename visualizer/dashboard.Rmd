@@ -20,14 +20,14 @@ default_implementation = "muc"
 
 parameters_muc = list(zone_filename = "../map/muc/zones_31468.shp",
                       base_year = 2011,
-                      final_year = 2045)
+                      final_year = 2050)
 parameters_mstm = list(zone_filename = "../map/mstm/zones_mstm_100026_clean.shp",
                        base_year = 2000,
                        final_year = 2005)
 
 parameters_kgw = list(zone_filename = "../map/kgw/zones_KGW.shp",
                        base_year = 2010,
-                       final_year = 2011)
+                       final_year = 2050)
 
 parameters_ct = list(zone_filename = "../map/ct/zones_ct.shp",
                        base_year = 2011,
