@@ -213,3 +213,4 @@ ggplot(events %>% filter(event == "ConstructionEvent" |
   facet_wrap(.~event, ncol = 3, scales = "free") + 
   theme(legend.position = "bottom")
 ggplotly()
+

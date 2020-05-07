@@ -1,7 +1,7 @@
 ### file reader module ###
 
 # UI for uploading result files
-fileReaderUI <- function(id, label = "Upload result files"){
+fileReaderUI <- function(id, label = "Upload result files. Select the output files called resultFile.csv and resultFileSpatial.csv."){
   ns <- NS(id)
   tagList(
     fileInput(inputId = ns("resultFiles"),

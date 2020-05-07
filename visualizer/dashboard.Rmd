@@ -44,7 +44,6 @@ base_year = parameters[[default_implementation]]$base_year
 final_year = parameters[[default_implementation]]$final_year
 
 # load required libraries
-
 library(readr) #for reading in data
 library(readxl) #for reading excel files
 library(sf) #for handling spatial data
