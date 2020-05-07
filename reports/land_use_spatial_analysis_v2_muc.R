@@ -16,7 +16,7 @@ shapefile_name = "map/muc/zones_31468.shp"
 
 shp = st_read(shapefile_name)
 
-zones_regions = read_csv("C:/models/silo/muc/input/zoneSystem.csv")
+zones_regions = read_csv("examples/muc/zoneSystem.csv")
 zones_regions = zones_regions %>% select(zone = Zone, region = Region, lkr = Landkreis_ID)
 spatial = data.frame()
 
