@@ -1,7 +1,8 @@
-pacman::p_load(readr, dplyr, ggplot2, reshape, plotly, sf, leaflet, tmap, tidyr)
+pacman::p_load(readr, dplyr, ggplot2, reshape, plotly, sf, leaflet, tmap, tidyr, here)
 
 
-folder = "examples/muc/"
+
+folder = paste(here(), "/examples/muc/", sep = "")
 
 scenarios = c("av0", "av2")
 scenario_names = c("Sc1", "Sc2")
@@ -12,11 +13,11 @@ file_name = "/resultFileSpatial_2.csv"
 
 file_name_2 = "/siloResults/commutingDistance.csv"
 
-shapefile_name = "map/muc/zones_31468.shp"
+shapefile_name = paste(here(),"/map/muc/zones_31468.shp", sep ="")
 
 shp = st_read(shapefile_name)
 
-zones_regions = read_csv("examples/muc/zoneSystem.csv")
+zones_regions = read_csv(paste(here(),"/examples/muc/zoneSystem.csv", sep =""))
 zones_regions = zones_regions %>% select(zone = Zone, region = Region, lkr = Landkreis_ID)
 spatial = data.frame()
 
@@ -79,13 +80,20 @@ df_20 = spatial %>% group_by(scenario,year) %>%
             hh = sum(households),
             acc = weighted.mean(autoAccessibility, population))
 
-ggplot(df_20, aes(x=year, y = pp, color = as.factor(scenario))) +
-  geom_path(size = 1) + 
-  ggtitle("Population")
+p = ggplot(df_20, aes(x=year, y = pp, color = as.factor(scenario))) +
+  geom_path(size = 1) + geom_point(size = 2) + 
+  ggtitle("Population") + 
+  xlab("Year") + ylab("Population") + 
+  theme_bw() + 
+  scale_x_continuous(expand = c(0,0)) +  scale_y_continuous(expand = c(0,0))
 
-ggplot(df_20, aes(x=year, y = dd, color = as.factor(scenario))) +
+ggplotly(p, width = 1500, height = 750, dynamicTicks  = T)
+
+q = ggplot(df_20, aes(x=year, y = dd, color = as.factor(scenario))) +
   geom_path(size = 1) + 
   ggtitle("Dwellings")
+
+ggplotly(q)
 
 
 df_2 = spatial %>% group_by(scenario,year,urban) %>%
@@ -96,48 +104,62 @@ df_2 = spatial %>% group_by(scenario,year,urban) %>%
             hh = sum(households),
             acc = weighted.mean(autoAccessibility, population))
 
-ggplot(df_2, aes(x=year, y = pp, color = as.factor(scenario))) +
+r = ggplot(df_2, aes(x=year, y = pp, color = as.factor(scenario))) +
   geom_path(size = 1) + 
   facet_grid(.~urban) +
   ggtitle("Population")
 
-ggplot(df_2, aes(x=year, y = hh, color = as.factor(scenario))) +
+ggplotly(r)
+
+s = ggplot(df_2, aes(x=year, y = hh, color = as.factor(scenario))) +
   geom_path(size = 1) + 
   facet_grid(.~urban)  +
   ggtitle("Households")
 
-ggplot(df_2, aes(x=year, y = pp/hh, color = as.factor(scenario))) +
+ggplotly(s)
+
+t = ggplot(df_2, aes(x=year, y = pp/hh, color = as.factor(scenario))) +
   geom_path(size = 1) + 
   facet_grid(.~urban) +
   ggtitle("Household size")
 
-ggplot(df_2, aes(x=year, y = dd, color = as.factor(scenario))) +
+ggplotly(t)
+
+u = ggplot(df_2, aes(x=year, y = dd, color = as.factor(scenario))) +
   geom_path(size = 1) + 
   facet_grid(.~urban) +
   ggtitle("Number of dwellings")
 
-ggplot(df_2, aes(x=year, y = dd-hh, color = as.factor(scenario))) +
+ggplotly(u)
+
+v = ggplot(df_2, aes(x=year, y = dd-hh, color = as.factor(scenario))) +
   geom_path(size = 1) + 
   facet_grid(.~urban, scales = "free") +
   ggtitle("Number of vacant dwellings")
-#ggplotly()
+
+ggplotly(v)
 
 
-ggplot(df_2, aes(x=year, y = price, color = as.factor(scenario))) +
+w = ggplot(df_2, aes(x=year, y = price, color = as.factor(scenario))) +
   geom_path(size = 1) + 
   facet_grid(.~urban) +
   ggtitle("Average dwelling price")
 
-ggplot(df_2, aes(x=year, y = 1 - hh/dd, color = as.factor(scenario))) +
+ggplotly(w)
+
+x = ggplot(df_2, aes(x=year, y = 1 - hh/dd, color = as.factor(scenario))) +
   geom_path(size = 1) + 
   facet_grid(.~urban) +
   ggtitle("Global vacancy rate")
 
-ggplot(df_2, aes(x=year, y = acc, color = as.factor(scenario))) +
+ggplotly(x)
+
+y = ggplot(df_2, aes(x=year, y = acc, color = as.factor(scenario))) +
   geom_path(size = 1) + 
   facet_wrap(.~urban) +
   ggtitle("Average auto accessibility (employment-calculation and population-averaging)")
-#ggplotly()
+
+ggplotly(y)
 
 
 
@@ -156,11 +178,11 @@ df_5 = df_5 %>% left_join(region_types, by = "region")
 
 df_10 = df_5 %>% group_by(year, scenario, urban) %>% summarize(avgTime = weighted.mean(time, pp))
 
-ggplot(df_10, aes(x=year, y = avgTime, color = scenario)) +
+za = ggplot(df_10, aes(x=year, y = avgTime, color = scenario)) +
   geom_path() +
   facet_wrap(.~urban) + 
   ggtitle("Global average commuting distance by origin region")
-#ggplotly()
+ggplotly(za)
 
 
 
@@ -207,10 +229,10 @@ df_40 = df_40 %>%
 #   facet_wrap(.~region, ncol = 3, scales = "free")
 
 
-ggplot(events %>% filter(event == "ConstructionEvent" |
+z2 = ggplot(events %>% filter(event == "ConstructionEvent" |
                            event == "MoveEvent"|
                            event == "RenovationEvent"), aes(x=year, y=count, color = scenario)) + geom_line() + 
   facet_wrap(.~event, ncol = 3, scales = "free") + 
   theme(legend.position = "bottom")
-ggplotly()
+ggplotly(z2)
 
