@@ -3,8 +3,8 @@ pacman::p_load(readr, dplyr, ggplot2, reshape, plotly, sf, leaflet, tmap, tidyr)
 
 folder = "examples/muc/"
 
-scenarios = c("av0")
-scenario_names = c("Example")
+scenarios = c("av0", "av2")
+scenario_names = c("Sc1", "Sc2")
 
 
 names = data.frame(code = scenarios, name = scenario_names)
