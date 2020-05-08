@@ -14,7 +14,7 @@ pacman::p_load(sf, here, dplyr)
 #
 # Please adapt the code below to the specific case
 
-original_file = paste(here(), "/map/toytown/fabiland.shp", sep="")
+original_file = paste(here(), "/map/toytown/fabiland-unr-dev.shp", sep="")
 
 data = st_read(original_file)
 

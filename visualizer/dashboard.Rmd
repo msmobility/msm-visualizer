@@ -15,7 +15,7 @@ runtime: shiny
 # increase the size limit of uploaded files
 options(shiny.maxRequestSize = 30*1024^2)
 
-default_implementation = "fabiland"
+default_implementation = "muc"
 #choose between mstm or muc or kgw
 
 parameters_muc = list(zone_filename = "../map/muc/zones_31468.shp",
