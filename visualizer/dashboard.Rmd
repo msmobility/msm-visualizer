@@ -15,7 +15,7 @@ runtime: shiny
 # increase the size limit of uploaded files
 options(shiny.maxRequestSize = 30*1024^2)
 
-default_implementation = "muc"
+default_implementation = "fabiland"
 #choose between mstm or muc or kgw
 
 parameters_muc = list(zone_filename = "../map/muc/zones_31468.shp",
@@ -33,11 +33,12 @@ parameters_ct = list(zone_filename = "../map/ct/zones_ct.shp",
                        base_year = 2011,
                        final_year = 2040)
 
+parameters_fabiland = list(zone_filename = "../map/toytown/fabiland_31468.shp",
+                       base_year = 0,
+                       final_year = 10)
 
-parameters = list(muc = parameters_muc, mstm = parameters_mstm, kgw=parameters_kgw, ct = parameters_ct)
 
-
-
+parameters = list(muc = parameters_muc, mstm = parameters_mstm, kgw=parameters_kgw, ct = parameters_ct, fabiland = parameters_fabiland)
 
 zone_filename = parameters[[default_implementation]]$zone_filename 
 base_year = parameters[[default_implementation]]$base_year
