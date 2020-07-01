@@ -10,11 +10,13 @@ msmDataTable <- function(data){
 
 # function to create map
 msmMap <- function(data, myAttribute, myColors, myTitle, myLegend, myStyle, categories){
-  tmap_leaflet(tm_shape(data()) + 
+  tmap_leaflet(tm_shape(data) + 
                  tm_polygons(myAttribute,
                          palette = myColors, title = myLegend,
                          style = myStyle, n = categories) + tm_layout(myTitle))
 }
+
+
 
 
 # function to create bar charts where negative and positive values are colored blue and red respectively
