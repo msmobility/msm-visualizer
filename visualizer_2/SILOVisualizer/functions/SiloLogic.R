@@ -4,11 +4,14 @@
 
 ## Function prepareSiloMap : Call the geographical database and filter according to the parameters in UI
 prepareSiloMap <- function (data, thisYear, zone_level, attribute){
-  
+  ## Conditional to choose between aggregate or keep dissagregate
   if(zone_level == FALSE){
 
     joinTable <- filter(data ,year == thisYear)
     spatialTable <- left_join(zones, joinTable, by="shp_id")
+    
+
+
     groupedTable <- spatialTable %>%
     group_by(shp_muni)%>% summarize_at(vars(attribute), list(attribute = sum)) 
     

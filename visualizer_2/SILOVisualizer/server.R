@@ -115,38 +115,58 @@ shinyServer(function(input, output) {
     
     
 ## Example siloMap
+    
     output$siloMap <- renderLeaflet({
-      print(input$spatialLevel)
+       attribute <- input$spatialLevel
+       style <- 'pretty'
+       categories <- 10
+       d <- FALSE
+       if(d == FALSE){
+         #attribute <- "households"
+         farbe <- "-RdBu"
+       } else {
+         #attribute <- "households"
+         farbe <- "-RdBu"
+       }
+       
+      if(input$spatialLevel == 'dwellings'){
+        attribute <- input$sDwelling
+        groupedTable <-prepareSiloMap(spatialData, input$year, input$zone_level, attribute)
+        print(input$sDwelling)
+        msmMap(groupedTable, attribute, farbe, 'Dwelling','Test',
+               input$siloMapStyle, input$siloMapCategories)
+      }else if(input$spatialLevel == 'income'){
+        attribute <- input$sIncome
+        groupedTable <-prepareSiloMap(spatialData, input$year, input$zone_level, attribute)
+        msmMap(groupedTable, attribute, farbe, 'Dwelling','Test',
+               input$siloMapStyle, input$siloMapCategories)
+      }else if(input$spatialLevel == 'accessibilities'){
+        attribute <- input$sAcc
+        groupedTable <-prepareSiloMap(spatialData, input$year, input$zone_level, attribute)
+        msmMap(groupedTable, attribute, farbe, 'Dwelling','Test',
+               input$siloMapStyle, input$siloMapCategories)
+      }else {
       groupedTable <-prepareSiloMap(spatialData, input$year, input$zone_level, input$spatialLevel)
       print(groupedTable)
-  
-      
-      style <- 'pretty'
-      categories <- 10
-      d <- FALSE
-      if(d == FALSE){
-        #attribute <- "households"
-        farbe <- "-RdBu"
-      } else {
-        #attribute <- "households"
-        farbe <- "-RdBu"
+      msmMap(groupedTable, input$spatialLevel, farbe,input$spatialLevel,"Label",
+             input$siloMapStyle, input$siloMapCategories)
       }
-      if (input$spatialLevel == "dwellings"){
-        msmMap(groupedTable, "attribute", farbe, 'Viviendas','Label',
-               input$siloMapStyle, input$siloMapCategories)
-      } else if (input$spatialLevel == "accessibilities"){
-        msmMap(groupedTable, attribute, farbe, "Viviendas","Label", 
-               input$siloMapStyle, input$siloMapCategories)
-      } else if (input$spatialLevel == "incomes"){
-        msmMap(groupedTable, attribute, farbe, "Viviendas","Label",
-               input$siloMapStyle, input$siloMapCategories)
-      } else {
-        msmMap(groupedTable, input$spatialLevel, farbe,input$spatialLevel,"Label",
-               input$siloMapStyle, input$siloMapCategories)
+      
+
+      #if (input$spatialLevel == "dwellings"){
+      #  
+      #} else if (input$spatialLevel == "accessibilities"){
+      #  msmMap(groupedTable, attribute, farbe, "Viviendas","Label", 
+      #         input$siloMapStyle, input$siloMapCategories)
+      #} else if (input$spatialLevel == "incomes"){
+      #  msmMap(groupedTable, attribute, farbe, "Viviendas","Label",
+      #         input$siloMapStyle, input$siloMapCategories)
+      #} else {
+        
         #tmap_leaflet(tm_shape(groupedTable) +
         #               tm_polygons("households", palette = farbe, title ="Hello World",style = 'pretty', n = 10) +
         #               tm_layout("Hii"))
-      }
+      #}
     })
     
     

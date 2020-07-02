@@ -36,8 +36,12 @@ names(sDwelling) <-unlist(filter(menuSettings, visualization =='spatial' & attri
 sIncome <- unlist(filter(menuSettings, visualization =='spatial' & attribute_name =='Income')%>%select(category_value))
 names(sIncome) <- unlist(filter(menuSettings, visualization =='spatial' & attribute_name == 'Income')%>% select(category_name))
 
+sAccessibility <- unlist(filter(menuSettings, visualization =='spatial' & attribute_name =='Accessibilities')%>%select(category_value))
+names(sAccessibility) <- unlist(filter(menuSettings, visualization =='spatial' & attribute_name == 'Accessibilities')%>% select(category_name))
+
 ## Read zones areas and spatial data (to be fixed)
-spatialData <-read.csv(paste(here(),"examples/muc/av0/resultFileSpatial_2.csv",sep="/"))
+
+spatialData <-read.csv(paste(here(),(parameters[12]),sep="/"))
 spatialData <-rename(spatialData, 'shp_id' = 'zone')
 zones <- st_read(paste(here(),"map/muc/zones_31468.shp",sep="/"))
 

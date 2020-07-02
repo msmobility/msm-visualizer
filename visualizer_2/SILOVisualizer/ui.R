@@ -17,10 +17,12 @@ library(readxl) #for reading excel files
 
 setwd(here())
 
-## Read external files for extra functions (to be checked)
+## Read external files for extra functions (to be checked)(fix in the latest version)
+
 source(paste(getwd(),"/visualizer_2/SILOVisualizer/functions/fileSettings.r", sep ="/"))
 source(paste(here(),"visualizer/figureTableFunctions.R", sep ='/')) #contains functions for creating plots, maps and tables
 source(paste(getwd(),"/visualizer_2/SILOVisualizer/functions/SiloLogic.r", sep ="/"))
+
 ## Dashboard
 
 ui = dashboardPage(
@@ -64,6 +66,8 @@ ui = dashboardPage(
                                               selectInput("sDwelling","Select dwelling level",(sDwelling))),
                              conditionalPanel("input.spatialLevel == 'income'",
                                               selectInput("sIncome", "Select income class", (sIncome))),
+                             conditionalPanel("input.spatialLevel == 'accessibilities'",
+                                              selectInput("sAcc", "Select accessibility mode", (sAccessibility))),
                              ## View growth
                              checkboxInput("baseYearcomparison","View growth from base year", value=FALSE),
                              
