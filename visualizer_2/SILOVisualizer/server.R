@@ -74,7 +74,10 @@ shinyServer(function(input, output) {
             o_laPaRa <- read.csv(paste(global$datapath,"labourParticipationRate.csv",sep="/", collapse = NULL))
             o_lanReg <- read.csv(paste(global$datapath,"landRegions.csv",sep="/", collapse = NULL))
             o_popYea <- read.csv(paste(global$datapath,"popYear.csv",sep="/", collapse = NULL))
-        }
+            global$o_spatialData <-read.csv(paste(global$datapath,"resultFileSpatial.csv",sep="/", collapse= NULL))
+            global$o_spatialData <-rename(global$o_spatialData, "shp_id" = "zone")
+
+            }
     })
 ## Scenario file loader
 ## Scenario File loader
@@ -112,61 +115,58 @@ shinyServer(function(input, output) {
         
       }
     })
+    dummyfunc <-eventReactive(input$update, {dummycall(1)})
     
-    
-## Example siloMap
-    
+## Plot Map
     output$siloMap <- renderLeaflet({
-       attribute <- input$spatialLevel
-       style <- 'pretty'
-       categories <- 10
-       d <- FALSE
-       if(d == FALSE){
-         #attribute <- "households"
-         farbe <- "-RdBu"
-       } else {
-         #attribute <- "households"
-         farbe <- "-RdBu"
-       }
-       
+      print(input$spatialLevel)
+      n <-dummyfunc()
+      
+      style <- 'pretty'
+      categories <- 10
+      d <- FALSE
+      if(d == FALSE){
+        #attribute <- "households"
+        farbe <- "-RdBu"
+      } else {
+        #attribute <- "households"
+        farbe <- "-RdBu"
+      }
       if(input$spatialLevel == 'dwellings'){
+        
         attribute <- input$sDwelling
-        groupedTable <-prepareSiloMap(spatialData, input$year, input$zone_level, attribute)
-        print(input$sDwelling)
-        msmMap(groupedTable, attribute, farbe, 'Dwelling','Test',
+        legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute)
+        groupedTable <-prepareSiloMap(global$o_spatialData, input$year, input$zone_level, attribute, "density")
+        
+        msmMap(groupedTable, attribute, farbe, legend[1],legend[2],
                input$siloMapStyle, input$siloMapCategories)
       }else if(input$spatialLevel == 'income'){
         attribute <- input$sIncome
-        groupedTable <-prepareSiloMap(spatialData, input$year, input$zone_level, attribute)
-        msmMap(groupedTable, attribute, farbe, 'Dwelling','Test',
+        legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute)
+        groupedTable <-prepareSiloMap(global$o_spatialData, input$year, input$zone_level, attribute, "density")
+        
+        msmMap(groupedTable, attribute, farbe, legend[1],legend[2],
                input$siloMapStyle, input$siloMapCategories)
       }else if(input$spatialLevel == 'accessibilities'){
         attribute <- input$sAcc
-        groupedTable <-prepareSiloMap(spatialData, input$year, input$zone_level, attribute)
-        msmMap(groupedTable, attribute, farbe, 'Dwelling','Test',
+        legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute)
+        groupedTable <-prepareSiloMap(global$o_spatialData, input$year, input$zone_level, attribute, "average")
+        
+        msmMap(groupedTable, attribute, farbe, legend[1],legend[2],
+               input$siloMapStyle, input$siloMapCategories)
+      }else if(input$spatialLevel == 'avePrice'){
+        groupedTable <-prepareSiloMap(global$o_spatialData, input$year, input$zone_level, input$spatialLevel, "average")
+        legend <- prepareSiloMapLabels(myLabels, "siloSpatial", input$spatialLevel)
+        
+        msmMap(groupedTable, input$spatialLevel, farbe,legend[1],legend[2],
                input$siloMapStyle, input$siloMapCategories)
       }else {
-      groupedTable <-prepareSiloMap(spatialData, input$year, input$zone_level, input$spatialLevel)
-      print(groupedTable)
-      msmMap(groupedTable, input$spatialLevel, farbe,input$spatialLevel,"Label",
-             input$siloMapStyle, input$siloMapCategories)
-      }
-      
-
-      #if (input$spatialLevel == "dwellings"){
-      #  
-      #} else if (input$spatialLevel == "accessibilities"){
-      #  msmMap(groupedTable, attribute, farbe, "Viviendas","Label", 
-      #         input$siloMapStyle, input$siloMapCategories)
-      #} else if (input$spatialLevel == "incomes"){
-      #  msmMap(groupedTable, attribute, farbe, "Viviendas","Label",
-      #         input$siloMapStyle, input$siloMapCategories)
-      #} else {
+        groupedTable <-prepareSiloMap(global$o_spatialData, input$year, input$zone_level, input$spatialLevel, "density")
+        legend <- prepareSiloMapLabels(myLabels, "siloSpatial", input$spatialLevel)
         
-        #tmap_leaflet(tm_shape(groupedTable) +
-        #               tm_polygons("households", palette = farbe, title ="Hello World",style = 'pretty', n = 10) +
-        #               tm_layout("Hii"))
-      #}
+        msmMap(groupedTable, input$spatialLevel, farbe,legend[1],legend[2],
+               input$siloMapStyle, input$siloMapCategories)
+      }
     })
     
     
