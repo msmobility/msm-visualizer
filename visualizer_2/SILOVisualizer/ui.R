@@ -27,33 +27,30 @@ source(paste(getwd(),"/visualizer_2/SILOVisualizer/functions/SiloLogic.r", sep =
 
 ui = dashboardPage(
     dashboardHeader(title = "SILO Visualizer 2.0"),
-    
     dashboardSidebar( width = 300,
-            ## Title
-          
-            h5("  Select folder with the result files"),
-            
-            ## Folder selector
-            
-            shinyDirButton("dir", "Select input folder", "Select directory"),
-            checkboxInput("comparison","Compare scenarios", value=FALSE),
-            conditionalPanel( "input.comparison == true",
-                              shinyDirButton("dir2","Select scenario folder", "Select directory")
-                              ),
-            ## Radio buttons for choose the representation
-            radioButtons("renderType", "Select the visualization type",
-                         choices = list("Spatial" = "spatial",
-                                        "Aspatial" = "aspatial")),
-            ## Slider for year selection and dissagregated map in Spatial visualizations
-            conditionalPanel("input.renderType == 'spatial'",
-                             ## Time horizon (update with model parameters)
-                             sliderInput(inputId = "year",label = "Year",
-                                         value = 2020, min = initialYear, max = finalYear),
-                             checkboxInput("zone_level", "View at zone level", value=FALSE)
-                             ),
-            ## Select box input (depends on the radio button)
-            conditionalPanel("input.renderType == 'spatial'",
-                             selectInput("spatialLevel", "Select spatial attribute",c("Population" = 'population',
+    ## Title
+    h5("  Select folder with the result files"),
+    ## Folder selector
+    shinyDirButton("dir", "Select input folder", "Select directory"),
+        checkboxInput("comparison","Compare scenarios", value=FALSE),
+        conditionalPanel( "input.comparison == true",
+            shinyDirButton("dir2","Select scenario folder", "Select directory")
+        ),
+    actionButton("update","Update data"),
+    ## Radio buttons for choose the representation
+    radioButtons("renderType", "Select the visualization type",
+        choices = list("Spatial" = "spatial",
+        "Aspatial" = "aspatial")),
+    ## Slider for year selection and dissagregated map in Spatial visualizations
+    conditionalPanel("input.renderType == 'spatial'",
+    ## Time horizon (update with model parameters)
+        sliderInput(inputId = "year",label = "Year",
+        value = 2020, min = initialYear, max = finalYear),
+        checkboxInput("zone_level", "View at zone level", value=FALSE)
+    ),
+    ## Select box input (depends on the radio button)
+    conditionalPanel("input.renderType == 'spatial'",
+        selectInput("spatialLevel", "Select spatial attribute",c("Population" = 'population',
                                                                                       "Households" = 'households',
                                                                                       "Jobs" = 'jobs',
                                                                                       "Available land"='availLand',
@@ -62,8 +59,8 @@ ui = dashboardPage(
                                                                                       "Accessibilites" ='accessibilities',
                                                                                       "Income" = 'income'
                                                                                       )),
-                             conditionalPanel("input.spatialLevel == 'dwellings'",
-                                              selectInput("sDwelling","Select dwelling level",(sDwelling))),
+    conditionalPanel("input.spatialLevel == 'dwellings'",
+        selectInput("sDwelling","Select dwelling level",(sDwelling))),
                              conditionalPanel("input.spatialLevel == 'income'",
                                               selectInput("sIncome", "Select income class", (sIncome))),
                              conditionalPanel("input.spatialLevel == 'accessibilities'",
@@ -97,28 +94,22 @@ ui = dashboardPage(
                              )
             
     ),
-    ## Graphs and table definitions
-        dashboardBody(
-          #leafletOutput("siloMap", height = 1200)
-                
-            
-          
-            tabsetPanel(
-            tabPanel("Graph", height = "100%", 
-                     conditionalPanel(condition = "input.renderType == 'spatial'",
-                                      leafletOutput("siloMap", height = 980)) 
-                     #conditionalPanel( condition = "input.num >=50",
-                     #plotOutput("hist")
-                     #)
-                    #plotOutput("hist"),
-                    #verbatimTextOutput("value")
-                     ),
+## Dashboard body
+    dashboardBody(
+        tabsetPanel(
+            tabPanel("Graph", height = "100%",
+                conditionalPanel(condition = "input.renderType == 'spatial'",
+                leafletOutput("siloMap", height = 980))
+                #,
+                #conditionalPanel(condition = "input.renderType == 'aspatial'")
+            ),
             tabPanel("Table",
-                     conditionalPanel( condition = "input.num >=50",
-                     #tableOutput("table")
-                     verbatimTextOutput("value")
-                     )
-                    ))
-        
+                conditionalPanel( condition = "input.num >=50",
+                #tableOutput("table")
+                
+                verbatimTextOutput("value")
+                )
+            )
+        )
     )
 )
