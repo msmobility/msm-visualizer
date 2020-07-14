@@ -5,6 +5,9 @@
 
 menuSettings <- read_excel(paste(here(),"visualizer_2/SILOVisualizer/visualizerMenuOptions.xlsx",sep="/"), sheet = "menu")
 configuration <- read_excel(paste(here(),"visualizer_2/SILOVisualizer/visualizerMenuOptions.xlsx",sep="/"), sheet ="config")
+## Read labels
+
+myLabels <- read_excel(paste(here(),"visualizer_2/SILOVisualizer/visualizerLabels.xlsx", sep="/"), sheet= "Sheet1" ) 
 
 ## Get local parameters
 parameters <- unlist(filter(configuration, implementation == 'muc'))
@@ -41,8 +44,7 @@ names(sAccessibility) <- unlist(filter(menuSettings, visualization =='spatial' &
 
 ## Read zones areas and spatial data (to be fixed)
 
-spatialData <-read.csv(paste(here(),(parameters[12]),sep="/"))
-spatialData <-rename(spatialData, 'shp_id' = 'zone')
+
 zones <- st_read(paste(here(),"map/muc/zones_31468.shp",sep="/"))
 
 print(finalYear)
