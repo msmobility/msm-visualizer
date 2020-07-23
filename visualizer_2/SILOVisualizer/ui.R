@@ -12,6 +12,12 @@ library(leaflet) #for producing interactive maps
 library(sf) #for handling spatial data
 library(tmap)
 library(readxl) #for reading excel files
+library(shinydashboardPlus) ## Extra elements for dashboard
+library(DT) ## For table outputs
+library(rgdal) ## Handle export shapefiles
+library(shinyjs) ## Handle javascript shiny
+##########################
+### Data preparation
 
 ## Set working directory
 
@@ -19,38 +25,40 @@ setwd(here())
 
 ## Read external files for extra functions (to be checked)(fix in the latest version)
 
-source(paste(getwd(),"/visualizer_2/SILOVisualizer/functions/fileSettings.r", sep ="/"))
+source(paste(getwd(),"/visualizer_2/SILOVisualizer/functions/fileSettings.r", sep ="/"))  ## Load auxiliary files like labels, seetings and shapefiles
 source(paste(here(),"visualizer/figureTableFunctions.R", sep ='/')) #contains functions for creating plots, maps and tables
 source(paste(getwd(),"/visualizer_2/SILOVisualizer/functions/SiloLogic.r", sep ="/"))
 
-## Dashboard
+##########################
+### Dashboard
 
 ui = dashboardPage(
     dashboardHeader(title = "SILO Visualizer 2.0"),
+##########################
+### Sidebar
+
     dashboardSidebar( width = 300,
-    ## Title
-    h5("  Select folder with the result files"),
+    h4("Select folders with the input files"),
     ## Folder selector
-    shinyDirButton("dir", "Select input folder", "Select directory"),
-        checkboxInput("comparison","Compare scenarios", value=FALSE),
-        conditionalPanel( "input.comparison == true",
-            shinyDirButton("dir2","Select scenario folder", "Select directory")
+    shinyDirButton("dir", "Base scenario folder","Select directory"),
+    checkboxInput("comparison","Compare scenarios", value=FALSE),
+    conditionalPanel( "input.comparison == true",
+        shinyDirButton("dir2","Alternative scenario folder", "Select directory")
         ),
-    actionButton("update","Update data"),
+    actionButton("update","Update"),
     ## Radio buttons for choose the representation
-    radioButtons("renderType", "Select the visualization type",
-        choices = list("Spatial" = "spatial",
-        "Aspatial" = "aspatial")),
-    ## Slider for year selection and dissagregated map in Spatial visualizations
+    radioButtons("renderType", h4("Select the visualization type"),
+        choices = list("Spatial" = "spatial","Aspatial" = "aspatial")),
+    ## Slider for year selection and disagregated map in Spatial visualizations
     conditionalPanel("input.renderType == 'spatial'",
     ## Time horizon (update with model parameters)
-        sliderInput(inputId = "year",label = "Year",
+        sliderInput(inputId = "year",label = h4("Select Year"),
         value = 2020, min = initialYear, max = finalYear),
         checkboxInput("zone_level", "View at zone level", value=FALSE)
     ),
     ## Select box input (depends on the radio button)
     conditionalPanel("input.renderType == 'spatial'",
-        selectInput("spatialLevel", "Select spatial attribute",c("Population" = 'population',
+        selectInput("spatialLevel", h4("Select spatial attribute"),c("Population" = 'population',
                                                                                       "Households" = 'households',
                                                                                       "Jobs" = 'jobs',
                                                                                       "Available land"='availLand',
@@ -60,16 +68,23 @@ ui = dashboardPage(
                                                                                       "Income" = 'income'
                                                                                       )),
     conditionalPanel("input.spatialLevel == 'dwellings'",
-        selectInput("sDwelling","Select dwelling level",(sDwelling))),
-                             conditionalPanel("input.spatialLevel == 'income'",
-                                              selectInput("sIncome", "Select income class", (sIncome))),
-                             conditionalPanel("input.spatialLevel == 'accessibilities'",
-                                              selectInput("sAcc", "Select accessibility mode", (sAccessibility))),
+        selectInput("sDwelling",h5("Select dwelling level"),(sDwelling))),
+    conditionalPanel("input.spatialLevel == 'income'",
+        selectInput("sIncome", h5("Select income class"), (sIncome))),
+    conditionalPanel("input.spatialLevel == 'accessibilities'",
+        selectInput("sAcc", h5("Select accessibility mode"), (sAccessibility))),
                              ## View growth
-                             checkboxInput("baseYearcomparison","View growth from base year", value=FALSE),
-                             
-                             numericInput("siloMapCategories", "Enter number of categories", 7, 3, 15, 1),
-                             radioButtons("siloMapStyle", "Select classification style", c("pretty", "equal", "quantile"), inline = TRUE)
+                             conditionalPanel("input.comparison == true",
+                                              radioButtons("comparisonSelector", h4("Select type of comparison"),
+                                                           choices = list("Compare scenarios" = 1,
+                                                                          "Base year comparison"= 2,
+                                                                          "No comparison" = 3), selected = 3),
+                                              conditionalPanel("input.comparisonSelector == 3",
+                                                               radioButtons("scenarioSelector", h4("Select map scenario"),
+                                                                            choices = list("Scenario 1" = 1, "Scenario 2" = 2), selected = 1))
+                                              ),
+                             numericInput("siloMapCategories", h4("Enter number of categories"), 7, 3, 15, 1),
+                             radioButtons("siloMapStyle", h4("Select classification style"), c("pretty", "equal", "quantile"), inline = TRUE)
                              
                              
                             ),
@@ -94,21 +109,26 @@ ui = dashboardPage(
                              )
             
     ),
+##########################
 ## Dashboard body
     dashboardBody(
         tabsetPanel(
             tabPanel("Graph", height = "100%",
                 conditionalPanel(condition = "input.renderType == 'spatial'",
-                leafletOutput("siloMap", height = 980))
-                #,
-                #conditionalPanel(condition = "input.renderType == 'aspatial'")
+                    leafletOutput("siloMap", height = 980)),
+                conditionalPanel(condition = "input.renderType == 'aspatial'",
+                    plotlyOutput("siloPlot", height = 980)             
+                    )
+
             ),
             tabPanel("Table",
-                conditionalPanel( condition = "input.num >=50",
-                #tableOutput("table")
+                conditionalPanel(condition = "input.renderType == 'spatial'",
+                    dataTableOutput('gisTable')),
+                downloadButton("downloadData", "Download .csv"),
+                downloadButton("downloadShape", "Download GeoJSON (to be implemented)")
                 
-                verbatimTextOutput("value")
-                )
+                     
+
             )
         )
     )
