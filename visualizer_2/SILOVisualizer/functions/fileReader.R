@@ -17,6 +17,7 @@ loadfiles <- reactive({
     o_laPaRa <- read.csv(paste(global$datapath,"labourParticipationRate.csv",sep="/", collapse = NULL))
     o_lanReg <- read.csv(paste(global$datapath,"landRegions.csv",sep="/", collapse = NULL))
     o_popYea <- read.csv(paste(global$datapath,"popYear.csv",sep="/", collapse = NULL))
+
     
   }
 })
