@@ -288,11 +288,9 @@ shinyServer(function(input, output) {
 
   })
   fig <- reactive({
-    for (column in names(getAspatialData()[1:,])){
-      print(column)
-    }
-    if(input$aspatialLevel == 'overview'){
+
     fig <-plot_ly(getAspatialData(), x = ~popYear)
+    
     fig <-fig%>%add_trace(y = ~population, name = 'Population', type = 'scatter', mode = 'lines')
     fig <-fig%>%add_trace(y = ~men, name = 'Men',  type = 'scatter', mode ='lines') 
     fig <-fig%>%add_trace(y = ~women, name = 'Women',  type = 'scatter', mode ='lines')
@@ -300,7 +298,6 @@ shinyServer(function(input, output) {
     fig <-fig%>%add_trace(y = ~dwellings, name = 'Dwellings',  type = 'scatter', mode ='lines')
     fig<- fig%>%layout(title= "Overview")
     return(fig)
-    }
   })
   output$siloPlot <-renderPlotly(
     fig()
