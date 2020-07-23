@@ -4,6 +4,7 @@
 
 ## Function prepareSiloMap : Call the geographical database and filter according to the parameters in UI
 prepareSiloMap <- function (data, thisYear, zone_level, attribute, aggregationType){
+  print("Entering to prepareSiloMap")
   ## Conditional to choose between aggregate or keep dissagregate
   if(zone_level == FALSE){
 
@@ -12,7 +13,8 @@ prepareSiloMap <- function (data, thisYear, zone_level, attribute, aggregationTy
     
     if(aggregationType == "average") {
       groupedTable <- spatialTable %>%
-      group_by(shp_muni)%>% summarize_at(vars(attribute), list(attribute = mean))
+      group_by(shp_muni)%>% summarize_at(vars(attribute), list(mean))
+      groupedTable <-groupedTable%>% mutate(!!attribute := groupedTable[[attribute]])
       
     } else {
       groupedTable <- spatialTable %>%
@@ -28,21 +30,26 @@ prepareSiloMap <- function (data, thisYear, zone_level, attribute, aggregationTy
     }
     
   }
+  print("Finishing prepareSiloMap")
   return(groupedTable)
   
 }
-prepareSiloMapScenario<-function(data, data2, thisYear, zone_level, attribute, aggregationType){
-  if(zone_level == FALSE){
-    joinTable <- filter(data ,year == thisYear)
-    joinTable2 <-filter(data2, year == thisYear)
-    joinScenarios <-left_join(joinTable, joinTable2, by="shp_id")
+compareScenarios<-function(data, data2,attribute){
+  comparisonDataBase <- data
+  
+    comparisonDataBase[[attribute]] <- ((data2[[attribute]] - data[[attribute]])/data[[attribute]])*100
     
-  }else{
-    ## Logic without grouping
-  }
+  ## Adjust infinite growth values to 1 (when the initial value =0
+  comparisonDataBase <- comparisonDataBase %>% mutate_if(is.numeric, function(x) ifelse(is.infinite(x),1,x))
+  comparisonDataBase <- comparisonDataBase %>% mutate_if(is.numeric, function(x) ifelse(is.nan(x),0,x))
+  
+  print(comparisonDataBase)
+  return(comparisonDataBase)
+
 }
 
-prepareSiloMapLabels <- function (dataLabel, model, feature){
+
+prepareSiloMapLabels <- function (dataLabel, model, feature, isComparison){
   if (feature == "dwellings"){
     
   }else if (feature == "income"){
@@ -53,6 +60,10 @@ prepareSiloMapLabels <- function (dataLabel, model, feature){
   filteredLabels <- filter(dataLabel, myDataType == model & myItem == feature)
   title <- filteredLabels[1,4]
   legend <-filteredLabels[1,5]
+  if(isComparison == TRUE){
+  legend <- paste(" % of change in ", legend)
+  }
+  
   }
   return (c(title,legend))
   return(legend)
