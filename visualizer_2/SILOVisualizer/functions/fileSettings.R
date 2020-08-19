@@ -11,8 +11,8 @@ myLabels <- read_excel(paste(here(),"visualizer_2/SILOVisualizer/visualizerLabel
 
 ## Get local parameters
 parameters <- unlist(filter(configuration, implementation == 'muc'))
-initialYear <- as.numeric(parameters[9])
-finalYear <- as.numeric(parameters[10])
+initialYear <- as.numeric(parameters[7])
+finalYear <- as.numeric(parameters[8])
 
 ## Create lists for aspatial categories
 
@@ -45,6 +45,6 @@ names(sAccessibility) <- unlist(filter(menuSettings, visualization =='spatial' &
 ## Read zones areas and spatial data (to be fixed)
 
 
-zones <- st_read(paste(here(),"map/muc/zones_31468.shp",sep="/"))
+zones <- st_read(paste(here(),parameters[9],sep="/"))
 
 print(finalYear)
