@@ -64,6 +64,11 @@ shinyServer(function(input, output, session) {
             global$o_popYea <- read.csv(paste(global$datapath,"popYear.csv",sep="/", collapse = NULL))
             global$o_spatialData <-read.csv(paste(global$datapath,"resultFileSpatial.csv",sep="/", collapse= NULL))
             global$o_spatialData <-rename(global$o_spatialData, "shp_id" = "zone")
+            
+            ## New parsed files, run the python code first
+            global$o_hhReIn <- read.csv(paste(global$datapath,"hhRentAndIncome.csv",sep="/", collapse = NULL))
+            global$o_perMig <- read.csv(paste(global$datapath,"persMigrants.csv",sep="/", collapse = NULL))
+            global$o_dwelQu <- read.csv(paste(global$datapath,"dwellingQualityLevel.csv",sep="/", collapse = NULL))
         }
     })
     
@@ -90,6 +95,11 @@ shinyServer(function(input, output, session) {
             global$c_popYea <- read.csv(paste(global$datapath2,"popYear.csv",sep="/", collapse = NULL))
             global$c_spatialData <-read.csv(paste(global$datapath2,"resultFileSpatial.csv",sep="/", collapse= NULL))
             global$c_spatialData <-rename(global$c_spatialData, "shp_id" = "zone")
+            
+            ## New parsed files, run the python code first
+            global$c_hhReIn <- read.csv(paste(global$datapath,"hhRentAndIncome.csv",sep="/", collapse = NULL))
+            global$c_perMig <- read.csv(paste(global$datapath,"persMigrants.csv",sep="/", collapse = NULL))
+            global$c_dwelQu <- read.csv(paste(global$datapath,"dwellingQualityLevel.csv",sep="/", collapse = NULL))
         }
     })
     
@@ -331,7 +341,7 @@ shinyServer(function(input, output, session) {
                 }
             }else if(input$HHLevel == 'hhRentIncome'){
                 if(input$comparison == FALSE){
-                    dataTable <- siloAspatialHHSizeIncome(global$o_hhType)
+                    dataTable <- siloAspatialHHRentIncome(global$o_hhReIn)
                 }else{
                     
                 }
