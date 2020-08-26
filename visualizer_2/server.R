@@ -69,6 +69,8 @@ shinyServer(function(input, output, session) {
             global$o_hhReIn <- read.csv(paste(global$datapath,"hhRentAndIncome.csv",sep="/", collapse = NULL))
             global$o_perMig <- read.csv(paste(global$datapath,"persMigrants.csv",sep="/", collapse = NULL))
             global$o_dwelQu <- read.csv(paste(global$datapath,"dwellingQualityLevel.csv",sep="/", collapse = NULL))
+            global$o_perRac <- read.csv(paste(global$datapath,"persByRace.csv",sep="/", collapse = NULL))
+            
         }
     })
     
@@ -97,9 +99,10 @@ shinyServer(function(input, output, session) {
             global$c_spatialData <-rename(global$c_spatialData, "shp_id" = "zone")
             
             ## New parsed files, run the python code first
-            global$c_hhReIn <- read.csv(paste(global$datapath,"hhRentAndIncome.csv",sep="/", collapse = NULL))
-            global$c_perMig <- read.csv(paste(global$datapath,"persMigrants.csv",sep="/", collapse = NULL))
-            global$c_dwelQu <- read.csv(paste(global$datapath,"dwellingQualityLevel.csv",sep="/", collapse = NULL))
+            global$c_hhReIn <- read.csv(paste(global$datapath2,"hhRentAndIncome.csv",sep="/", collapse = NULL))
+            global$c_perMig <- read.csv(paste(global$datapath2,"persMigrants.csv",sep="/", collapse = NULL))
+            global$c_dwelQu <- read.csv(paste(global$datapath2,"dwellingQualityLevel.csv",sep="/", collapse = NULL))
+            global$c_perRac <- read.csv(paste(global$datapath2,"persByRace.csv",sep="/", collapse = NULL))
         }
     })
     
@@ -343,15 +346,115 @@ shinyServer(function(input, output, session) {
                 if(input$comparison == FALSE){
                     dataTable <- siloAspatialHHRentIncome(global$o_hhReIn)
                 }else{
+                    o_hhRentInc <- siloAspatialHHRentIncome(global$o_hhReIn)
+                    c_hhRentInc <- siloAspatialHHRentIncome(global$c_hhReIn)
+                    dataTable <- siloAspatialTableComparator(o_hhRentInc, c_hhRentInc)
+                }
+            }else if(input$HHLevel == 'hhAvRent'){
+                if(input$comparison == FALSE){
+                    dataTable <- siloAspatialHHAvRent(global$o_hhReIn)
+                }else{
+                    o_hhRentInc <- siloAspatialHHAvRent(global$o_hhReIn)
+                    c_hhRentInc <- siloAspatialHHAvRent(global$c_hhReIn)
+                    dataTable <- siloAspatialTableComparator(o_hhRentInc,c_hhRentInc)
+                }
+            }
+        } else if (input$aspatialLevel == 'persons'){
+            if(input$personsLevel == 'peAgeGend'){
+                if(input$comparison == FALSE){
+                    print('we are in the correct place')
+                    dataTable <-siloAspatialPopAge(global$o_popYea)    
+                }else{
+                    o_popAge <-siloAspatialPopAge(global$o_popYea)
+                    c_popAge <-siloAspatialPopAge(global$c_popYea)
+                    dataTable <- siloAspatialTableComparator(o_popAge, c_popAge)
+                }
+            }else if(input$personsLevel == 'peRace'){
+                if(input$comparison == FALSE){
+                    dataTable <- siloAspatialPopRace(global$o_perRac)
+                }else{
+                    o_perRace <- siloAspatialPopRace(global$o_perRac)
+                    c_perRace <- siloAspatialPopRace(global$c_perRac)
+                }
+            }else if (input$personsLevel == 'peLaborPartRate'){
+                if(input$comparison == FALSE){
+                    dataTable <-siloAspatialPopParticippation(global$o_laPaRa)
+                }else{
+                    o_popPart <-siloAspatialPopParticippation(global$o_laPaRa)
+                    c_popPart <-siloAspatialPopParticippation(global$c_laPaRa)
+                    dataTable <-siloAspatialTableComparator(o_popPart, c_popPart)
+                }
                     
+            }else if(input$personsLevel == 'pemigration'){
+                if(input$comparison == FALSE){
+                    dataTable <-siloAspatialpopMigration(global$o_perMig)    
+                }else{
+                    o_popMig <-siloAspatialpopMigration(global$o_perMig)
+                    c_popMig <-siloAspatialpopMigration(global$c_perMig)
+                    dataTable <-siloAspatialTableComparator(o_popMig, c_popMig)
                 }
             }
         } else if (input$aspatialLevel =='dwellings'){
-            
+            if (input$dwellingsLevel == 'dwellQuality'){
+                if(input$comparison == FALSE){
+                    dataTable <-siloAspatialDwellingQuality(global$o_dwelQu)
+                }else{
+                    o_dewllQuality <-siloAspatialDwellingQuality(global$o_dwelQu)
+                    c_dewllQuality <-siloAspatialDwellingQuality(global$c_dwelQu)
+                    dataTable <-siloAspatialTableComparator(o_dewllQuality, c_dewllQuality)
+                }
+            }else if(input$dwellingsLevel == 'dwellType'){
+                if(input$comparison == FALSE){
+                    dataTable <- siloAspatialDwellings(global$o_dwelli,'count')
+                }else{
+                    o_dwellType <- siloAspatialDwellings(global$o_dwelli,'count')
+                    c_dwellType <- siloAspatialDwellings(global$c_dwelli,'count')
+                    dataTable <- siloAspatialTableComparator(o_dwellType, c_dwellType)
+                }
+                
+            }else if(input$dwellingsLevel == 'dwellAvMonPrice'){
+                if(input$comparison == FALSE){
+                    dataTable <- siloAspatialDwellings(global$o_dwelli,'price')
+                }else{
+                    o_dwellAvPr <-siloAspatialDwellings(global$o_dwelli,'price')
+                    o_dwellAvPr <-siloAspatialDwellings(global$c_dwelli,'price')
+                    dataTable <- siloAspatialTableComparator(o_dwellAvPr, c_dwellAvPr)
+                }
+                
+            }else if(input$dwellingsLevel == 'dwellVacancy'){
+                if(input$comparison == FALSE){
+                    dataTable <- siloAspatialDwellings(global$o_dwelli,'vacancy')
+                    
+                }else{
+                    o_dwellVac <-siloAspatialDwellings(global$o_dwelli,'vacancy')
+                    c_dwellVac <-siloAspatialDwellings(global$c_dwelli,'vacancy')
+                    dataTable <- siloAspatialTableComparator(o_dwellVac, c_dwellVac)
+                }
+            }
         } else if (input$aspatialLevel =='regional'){
             ## This one could be moved to the map
             
         } else if (input$aspatialLevel == 'events'){
+            print('Entering to the events logic')
+            if(input$eventsLevel == 'hhEvents'){
+               if(input$comparison == FALSE){
+                   print('Entering to hh events logic')
+                    dataTable <-siloAspatialEvents(global$o_eventc, hhEvents)
+               }else{
+                   dataTable <-siloAspatialEvents(global$o_eventc, hhEvents)
+               }
+            }else if(input$eventsLevel == 'peEvents'){
+                if(input$comparison == FALSE){
+                    print('Entering to persons events logic')
+                     dataTable <-siloAspatialEvents(global$o_eventc, perEvents)
+                }    
+            }else if(input$eventsLevel == 'dwellEvents'){
+                if(input$comparison == FALSE){
+                    print('Entering to dwelling events logic')
+                    dataTable <-siloAspatialEvents(global$o_eventc, dwellEvents)
+                }
+                
+            }
             
         }
         return(dataTable)
@@ -401,7 +504,31 @@ shinyServer(function(input, output, session) {
                 fig<-plot_ly(getAspatialData(), x=~year, y=~households, type='scatter', color=~carOwnershipLevel, colors = msmSequential, line = list(simplify = F))
             }else if(input$HHLevel == 'hhRentIncome'){
                 fig <- msmAnimatedLines(getAspatialData,msmSequential,input$switchView)
+            }else if(input$HHLevel == 'hhAvRent'){
+                fig <- msmSimpleLines(getAspatialData, msmSequential)
             }
+        }else if (input$aspatialLevel == 'persons'){
+            if(input$personsLevel == 'peAgeGend'){
+                if(input$pyramid == TRUE){
+                    
+                    fig<- msmPyramid(getAspatialData, msmSequential[c(3, 4)], c(-60000, -40000, -20000, 0, 20000, 40000, 60000),
+                                     c("60k", "40k", "20k", "0", "20k", "40k", "60k"))
+                }else{
+                    fig<- msmPyramidLines(getAspatialData,msmSequential)
+                }
+            }else if(input$personsLevel == 'peRace'){
+                fig <-msmSimpleLines(getAspatialData, msmSequential)
+            }else if(input$personsLevel == 'peLaborPartRate'){
+                fig <-msmAnimatedBars (getAspatialData, msmSequential)
+            }else if(input$personsLevel == 'pemigration'){
+                fig <-msmSimpleLines(getAspatialData, msmSequential)
+            }
+        }else if (input$aspatialLevel == 'dwellings'){
+            fig <-msmSimpleLines(getAspatialData, msmSequential)
+        }else if(input$aspatialLevel == 'regional'){
+            
+        }else if(input$aspatialLevel == 'events'){
+            fig <-msmSimpleLines(getAspatialData, msmSequential)
         }
         return(fig)
     })
