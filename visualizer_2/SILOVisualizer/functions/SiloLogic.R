@@ -112,12 +112,13 @@ siloAspatialHHSizeIncome <- function(hhTable){
   hhTable[hhTable$hh_income == 'HIGH', "hh_income"] <- '3_HIGH'
   hhTable[hhTable$hh_income == 'VERY_HIGH', "hh_income"] <- '4_VERY_HIGH'
   hhTable <- hhTable%>%rename(Year = year, Value = count, Key2 = hh_income, Key =hh_size)
+  print(hhTable)
   return(hhTable)
 }
 siloAspatialRace <- function(hhRaceTable){
   
   dataTable<- hhRaceTable%>%group_by(year)%>%summarize_at(c('shWhite','shBlack','shHispanic','shOther'),sum)
-
+  
   print(dataTable)
   return(dataTable)
   
@@ -132,8 +133,76 @@ siloAspatialHHSize <- function(hhTable){
   print(hhTable)
   return(hhTable)
 }
-
-
+siloAspatialHHRentIncome <- function(hhTable){
+  hhTable = hhTable %>% tidyr::pivot_longer(
+    cols = starts_with('rent_'),
+    names_to = 'Key',
+    values_to = 'value',
+    names_prefix = 'rent_'
+  )
+  hhTable <- hhTable%>%rename(Key2 = Income, Value = value, Year = year)
+  # Rename values to give order in the plot
+  
+  hhTable[hhTable$Key == '250', 'Key'] <- '01 Income = 250'
+  hhTable[hhTable$Key == '500', 'Key'] <- '02 Income = 500'
+  hhTable[hhTable$Key == '750', 'Key'] <- '03 Income = 750'
+  hhTable[hhTable$Key == '1000', 'Key'] <- '04 Income = 1000'
+  hhTable[hhTable$Key == '1250', 'Key'] <- '05 Income = 1250'
+  hhTable[hhTable$Key == '1500', 'Key'] <- '06 Income = 1500'
+  hhTable[hhTable$Key == '1750', 'Key'] <- '07 Income = 1750'
+  hhTable[hhTable$Key == '2000', 'Key'] <- '08 Income = 2000'
+  hhTable[hhTable$Key == '2250', 'Key'] <- '09 Income = 2250'
+  hhTable[hhTable$Key == '2500', 'Key'] <- '10 Income = 2500'
+  print(hhTable)
+  return(hhTable)
+}
+siloAspatialHHAvRent <-function(hhTable){
+  hhTable <- hhTable %>% select(year,Income, averageRent)
+  hhTable <- hhTable%>%rename(Year = year, Key = Income, Value = averageRent,)
+  
+}
+siloAspatialPopAge <-function(popTable){
+  popTable <-popTable%>%rename(Male = men, Female = women)
+  
+  popTable <- popTable%>%tidyr::pivot_longer(
+    cols =c('Male','Female'),
+    names_to = 'Key',
+    values_to = 'Value'
+  )
+  popTable <-popTable%>%rename(Key2 = age, Year = year)
+  return(popTable)
+}
+siloAspatialPopRace <-function(popTable){
+  popTable <-popTable%>%rename(Year = year, Key =	ppByRace, Value =	hh)
+  return(popTable)
+}
+siloAspatialPopParticippation <-function(popTable){
+  popTable <-popTable%>%rename(Male = male, Female = female, Key2 = group, Year = year )
+  popTable<-popTable%>%tidyr::pivot_longer(
+    cols =c(Male,Female),
+    names_to = 'Key',
+    values_to = 'Value'
+  )
+  return(popTable)
+}
+siloAspatialpopMigration <-function(popTable){
+  colnames(popTable)<- c("Year", "Key","Value")
+  return(popTable)
+}
+siloAspatialDwellingQuality <-function(dwellTable){
+  dwellTable <-dwellTable%>%rename(Year = year, Key = QualityLevel, Value = Dwellings)
+  print(dwellTable)
+  return(dwellTable)
+}
+siloAspatialDwellings <-function(dwellTable, column){
+  dwellTable <- dwellTable%>%rename(Year = year, Key = type, Value = column)
+  return(dwellTable)
+}
+siloAspatialEvents <- function(eventsTable, optionsVector){
+  eventsTable <-subset(eventsTable, event %in% optionsVector)
+  eventsTable <-eventsTable%>%rename(Year = year, Key = event, Value =count)
+  return(eventsTable)
+}
 
 dummycall <-function(int){
   return(int)
