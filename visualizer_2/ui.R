@@ -17,6 +17,8 @@ library(DT) ## For table outputs
 library(rgdal) ## Handle export shapefiles
 library(shinyjs) ## Handle javascript shiny
 library(RColorBrewer) #for picking colors
+library(tidyr) ## For data manipulation
+library(tidyverse) ## For data manipulation
 ##########################
 ### Data preparation
 
@@ -118,13 +120,15 @@ ui = dashboardPagePlus(
                         conditionalPanel("input.HHLevel == 'hhSizInc' |input.HHLevel == 'hhRentIncome'",
                             checkboxInput("switchView","Switch View", value=FALSE))),
                     conditionalPanel("input.aspatialLevel == 'persons'",
-                        selectInput("personsLevel", "Select person level",(aPerson))),
+                        selectInput("personsLevel", "Select person level",(aPerson)),
+                        conditionalPanel("input.personsLevel == 'peAgeGend'",
+                            checkboxInput("pyramid", "View as population pyramid", value = FALSE))),
                     conditionalPanel("input.aspatialLevel == 'dwellings'",
                         selectInput("dwellingsLevel", "Select dwelling level", (aDwelling))),
                     conditionalPanel("input.aspatialLevel == 'regional'",
-                        selectInput("dwellingsLevel", "Select dwelling level", (aRegional))),
+                        selectInput("regionalLevel", "Select dwelling level", (aRegional))),
                     conditionalPanel("input.aspatialLevel == 'events'",
-                        selectInput("dwellingsLevel", "Select dwelling level", (aEvent)))
+                        selectInput("eventsLevel", "Select dwelling level", (aEvent)))
                 )
             )
         )
