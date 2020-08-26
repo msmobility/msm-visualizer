@@ -48,3 +48,9 @@ names(sAccessibility) <- unlist(filter(menuSettings, visualization =='spatial' &
 zones <- st_read(paste(here(),parameters[9],sep="/"))
 
 print(finalYear)
+
+### Events
+
+hhEvents <- c('MigrationEvent', 'MoveEvent')
+perEvents <- c('BirthEvent', 'DeathEvent','DivorceEvent','EducationEvent','EmploymentEvent','LeaveParentsEvent','LicenseEvent','MarriageEvent')
+dwellEvents<- c('ConstructionEvent','DemolitionEvent','RenovationEvent')
