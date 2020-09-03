@@ -1,4 +1,6 @@
+##################################################
 ## fileSettings.R
+## Filesettings contains all the visualizer default values and loads the predefined values and lists
 ## Reads the visalizerMenuOptions and apply the categories to each
 
 ## Read graphic options
@@ -13,6 +15,10 @@ myLabels <- read_excel(paste(here(),"visualizer_2/SILOVisualizer/visualizerLabel
 parameters <- unlist(filter(configuration, implementation == 'muc'))
 initialYear <- as.numeric(parameters[7])
 finalYear <- as.numeric(parameters[8])
+
+zones <- st_read(paste(here(),parameters[9],sep="/"))
+
+
 
 ## Create lists for aspatial categories
 
@@ -41,13 +47,6 @@ names(sIncome) <- unlist(filter(menuSettings, visualization =='spatial' & attrib
 
 sAccessibility <- unlist(filter(menuSettings, visualization =='spatial' & attribute_name =='Accessibilities')%>%select(category_value))
 names(sAccessibility) <- unlist(filter(menuSettings, visualization =='spatial' & attribute_name == 'Accessibilities')%>% select(category_name))
-
-## Read zones areas and spatial data (to be fixed)
-
-
-zones <- st_read(paste(here(),parameters[9],sep="/"))
-
-print(finalYear)
 
 ### Events
 
