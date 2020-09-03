@@ -19,6 +19,8 @@ library(shinyjs) ## Handle javascript shiny
 library(RColorBrewer) #for picking colors
 library(tidyr) ## For data manipulation
 library(tidyverse) ## For data manipulation
+library(tmap)
+library(tmaptools)
 ##########################
 ### Data preparation
 
@@ -144,7 +146,7 @@ ui = dashboardPagePlus(
             enable_dropdown = TRUE,
             width = NULL,
             conditionalPanel(condition = "input.renderType == 'spatial'",
-                leafletOutput("siloMap", height = 900),
+                leafletOutput("siloMap", height = 900)
                 #wellPanel(textOutput("cnty"))
                 ),
             conditionalPanel(condition = "input.renderType == 'aspatial'",
@@ -168,8 +170,6 @@ ui = dashboardPagePlus(
                 dataTableOutput('aspatialTable'),
                 downloadButton("downloadAspatialData", "Download .csv")
                 )
-                
-                
         )
     )
 )

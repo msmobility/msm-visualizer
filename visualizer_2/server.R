@@ -1,11 +1,8 @@
-
-library(shiny)
+## Server logic
 
 shinyServer(function(input, output, session) {
     
-    ##  source(paste(here(),"/visualizer_2/SILOVisualizer/functions/fileReader.R", sep='/'))
-    
-    ## Directory selector
+    ## Directory selector original scenario
     shinyDirChoose(input, 'dir', roots=c(home = getwd()), filetypes=c('csv','shp'))
     global <- reactiveValues(datapath = getwd())
     dir <- reactive(input$dir)
@@ -22,7 +19,7 @@ shinyServer(function(input, output, session) {
                      global$datapath <-
                          file.path(getwd(), paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
                  })
-    ## Directory selector for scenarios
+    ## Directory selector for comparison scenario
     shinyDirChoose(input, "dir2", roots=c(home=getwd()), filetypes=c('csv','shp'))
     global <- reactiveValues(datapath2 = getwd())
     dir2 <- reactive(input$dir2)
@@ -39,10 +36,9 @@ shinyServer(function(input, output, session) {
                      global$datapath2 <-
                          file.path(getwd(), paste(unlist(dir2()$path[-1]), collapse = .Platform$file.sep))
                  })
-    
     ## File loader
     
-    observeEvent(global$datapath, {loadfiles()})
+    observeEvent(input$update, {loadfiles()})
     
     loadfiles <- reactive({
         if (global$datapath == getwd()){}
@@ -60,7 +56,7 @@ shinyServer(function(input, output, session) {
             global$o_hhSize <- read.csv(paste(global$datapath,"hhSize.csv",sep="/", collapse = NULL))
             global$o_hhType <- read.csv(paste(global$datapath,"hhType.csv",sep="/", collapse = NULL))
             global$o_laPaRa <- read.csv(paste(global$datapath,"labourParticipationRate.csv",sep="/", collapse = NULL))
-            global$o_lanReg <- read.csv(paste(global$datapath,"landRegions.csv",sep="/", collapse = NULL))
+            global$o_lanReg <- read.csv(paste(global$datapath,"landRegions.csv",sep="/"))
             global$o_popYea <- read.csv(paste(global$datapath,"popYear.csv",sep="/", collapse = NULL))
             global$o_spatialData <-read.csv(paste(global$datapath,"resultFileSpatial.csv",sep="/", collapse= NULL))
             global$o_spatialData <-rename(global$o_spatialData, "shp_id" = "zone")
@@ -70,12 +66,25 @@ shinyServer(function(input, output, session) {
             global$o_perMig <- read.csv(paste(global$datapath,"persMigrants.csv",sep="/", collapse = NULL))
             global$o_dwelQu <- read.csv(paste(global$datapath,"dwellingQualityLevel.csv",sep="/", collapse = NULL))
             global$o_perRac <- read.csv(paste(global$datapath,"persByRace.csv",sep="/", collapse = NULL))
-            
+            global$o_regCoT <- read.csv(paste(global$datapath,"regionAvCommutingTime.csv",sep="/", collapse = NULL))
+            global$o_regJoS <- read.csv(paste(global$datapath,"jobsBySectorAndRegion.csv",sep="/", collapse = NULL))
         }
+        ## Select implementation data
+        pathElements <-str_split(global$datapath, '/', simplify = TRUE)
+        global$implementation_value <-pathElements[length(pathElements)-1]
     })
-    
+    ## Update elements from implementation
+    observeEvent(input$update, {updateData()})
+    updateData <-reactive({
+        parameters <- unlist(filter(configuration, implementation == global$implementation_value))
+        initialYear <- as.numeric(parameters[7])
+        finalYear <- as.numeric(parameters[8])
+        updateSliderInput(session, "year", min = initialYear, max = finalYear)
+        global$zones <- st_read(paste(here(),parameters[9],sep="/"))
+        
+    })
     ## Scenario File loader
-    observeEvent(global$datapath2, {loadfiles2()})
+    observeEvent(input$update, {loadfiles2()})
     
     loadfiles2 <- reactive({
         if (global$datapath2 == getwd()){}
@@ -100,9 +109,9 @@ shinyServer(function(input, output, session) {
             
             ## New parsed files, run the python code first
             global$c_hhReIn <- read.csv(paste(global$datapath2,"hhRentAndIncome.csv",sep="/", collapse = NULL))
-            global$c_perMig <- read.csv(paste(global$datapath2,"persMigrants.csv",sep="/", collapse = NULL))
+            #global$c_perMig <- read.csv(paste(global$datapath2,"persMigrants.csv",sep="/", collapse = NULL))
             global$c_dwelQu <- read.csv(paste(global$datapath2,"dwellingQualityLevel.csv",sep="/", collapse = NULL))
-            global$c_perRac <- read.csv(paste(global$datapath2,"persByRace.csv",sep="/", collapse = NULL))
+            #global$c_perRac <- read.csv(paste(global$datapath2,"persByRace.csv",sep="/", collapse = NULL))
         }
     })
     
@@ -111,6 +120,7 @@ shinyServer(function(input, output, session) {
     
     ## Plot Map
     output$siloMap <- renderLeaflet({
+        print(input$update)
         n <-dummyfunc()
         
         ## Map color selection
@@ -125,23 +135,17 @@ shinyServer(function(input, output, session) {
             farbe <- "YlOrBr"
         }
         ## Execute maps
-        
-        print("Execute map calculation")
-        print(names(spatialData()[[1]])[2])
+
         dataSubset <-spatialData()[[1]]
-        print(dataSubset)
         legend <- spatialData()[[2]]
         attribute <- spatialData()[[3]]
-        print(attribute)
-        print(legend[2])
+
         msmMap(dataSubset,attribute, farbe,legend[1],legend[2],
                input$siloMapStyle, input$siloMapCategories)
         
     })
     
-    
-    
-    #################################
+#################################
     # Modularize spatial inputs
     spatialData <-reactive({
         n <-dummyfunc()
@@ -173,8 +177,8 @@ shinyServer(function(input, output, session) {
             
             isComparison <-TRUE
             legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute, isComparison)
-            originalDataSet <-prepareSiloMap(global$o_spatialData, input$year, input$zone_level, attribute, aggregationType)
-            scenarioDataSet <-prepareSiloMap(global$c_spatialData, input$year, input$zone_level, attribute, aggregationType)
+            originalDataSet <-prepareSiloMap(global$o_spatialData, input$year, input$zone_level, attribute, aggregationType, global$zones)
+            scenarioDataSet <-prepareSiloMap(global$c_spatialData, input$year, input$zone_level, attribute, aggregationType, global$zones)
             
             groupedTable <- compareScenarios(originalDataSet, scenarioDataSet,attribute)  
             
@@ -183,8 +187,8 @@ shinyServer(function(input, output, session) {
             isComparison <-TRUE
             
             legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute, isComparison)
-            originalDataSet <-prepareSiloMap(global$o_spatialData, initialYear, input$zone_level, attribute, aggregationType)
-            scenarioDataSet <-prepareSiloMap(global$o_spatialData, input$year, input$zone_level, attribute, aggregationType)
+            originalDataSet <-prepareSiloMap(global$o_spatialData, initialYear, input$zone_level, attribute, aggregationType, global$zones)
+            scenarioDataSet <-prepareSiloMap(global$o_spatialData, input$year, input$zone_level, attribute, aggregationType, global$zones)
             groupedTable <- compareScenarios(originalDataSet, scenarioDataSet,attribute)
             
         } else {
@@ -197,7 +201,7 @@ shinyServer(function(input, output, session) {
             isComparison <-FALSE
             legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute, isComparison)
             print("Entering groupedTable")
-            groupedTable <-prepareSiloMap(spatialDataSet, input$year, input$zone_level, attribute, aggregationType)
+            groupedTable <-prepareSiloMap(spatialDataSet, input$year, input$zone_level, attribute, aggregationType, global$zones)
             print("Groupedtable finished")
             
         }
@@ -208,43 +212,19 @@ shinyServer(function(input, output, session) {
         
     })
     #################################
-    
     ## Experimental map reactivity
-    geo <- eventReactive(input$map_shape_click, {
-        shinyjs::show("reactiveOutput6")
-        shinyjs::show("reactiveOutput5")
-        shinyjs::show("reactiveOutput4a1")
-        shinyjs::show("reactiveOutput4a")
-        shinyjs::show("reactiveOutput4")
-        shinyjs::show("reactiveOutput3")
-        shinyjs::show("reactiveOutput2a")
-        shinyjs::show("reactiveOutput2b")
-        shinyjs::show("reactiveOutput2c")
-        shinyjs::show("reactiveOutput1")
-        shinyjs::removeClass(class = "shinyjs-hide", selector = "hr")
-        shinyjs::removeClass(class = "shinyjs-hide", selector = ".kpi-group")
-        
-        click <- input$map_shape_click
-        print(click$id)
-        as.numeric(click$id)
-    })
-    observe({
-        event <-input$map_shape_click
-        print(input$map_shape_click)
-        #output$cnty <- renderText(shape$NAME[shape$CNTY_ID == event$id])
+    geo <- observeEvent(input$siloMap_shape_click, {
+        p <- input$siloMap_shape_click
+        print(p[1])
     })
     #################################
     output$gisTable <- renderDataTable(
-        
         select(as.data.frame(spatialData()[1]),-geometry)
     )
     output$aspatialTable <-renderDataTable(
         getAspatialData()
     )
-
-    
     ##  select(as.data.frame(global$exportTable),-geometry)
-    
     ## Downloader
     output$downloadData <- downloadHandler(
         filename = function() {
@@ -280,7 +260,7 @@ shinyServer(function(input, output, session) {
         }
     )
     #################################
-    ## Aspatial logic procedure, calculate the dataTable output based on the input parameters
+    ## Aspatial logic procedure, calculate dataTable output used in plots based on the input parameters
     getAspatialData <- reactive({
         n <-dummyfunc()
         
@@ -432,7 +412,26 @@ shinyServer(function(input, output, session) {
                 }
             }
         } else if (input$aspatialLevel =='regional'){
-            ## This one could be moved to the map
+            if(input$regionalLevel == 'reAvCommDist'){
+                varColumn = 'minutes'
+                dataTable <- global$o_regCoT
+                dataTable<- siloAspatialRegions(dataTable, varColumn)
+            }else if(input$regionalLevel == 'reAvailableLand'){
+                varColumn = 'land'
+                dataTable <- global$o_lanReg
+                dataTable<- siloAspatialRegions(dataTable, varColumn)
+            }else if (input$regionalLevel == 'reTotalJobs'){
+                varColumn = 'total'
+                dataTable <- global$o_regJoS
+                dataTable<- siloAspatialRegions(dataTable, varColumn)
+            }else if(input$regionalLevel == 'reJobsSect'){
+                print(global$o_lanReg)
+                dataTable <- siloAspatialJobsReg(global$o_regJoS)
+            }
+            
+            
+            
+            
             
         } else if (input$aspatialLevel == 'events'){
             print('Entering to the events logic')
@@ -526,6 +525,12 @@ shinyServer(function(input, output, session) {
         }else if (input$aspatialLevel == 'dwellings'){
             fig <-msmSimpleLines(getAspatialData, msmSequential)
         }else if(input$aspatialLevel == 'regional'){
+            if (input$regionalLevel == 'reJobsSect'){
+                fig <-msmAnimatedBands(getAspatialData)
+            }else{
+                fig <-msmBands(getAspatialData, 'minutes')
+            }
+            
             
         }else if(input$aspatialLevel == 'events'){
             fig <-msmSimpleLines(getAspatialData, msmSequential)
