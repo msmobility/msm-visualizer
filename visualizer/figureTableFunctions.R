@@ -16,9 +16,6 @@ msmMap <- function(data, myAttribute, myColors, myTitle, myLegend, myStyle, cate
                          style = myStyle, n = categories) + tm_layout(myTitle))
 }
 
-
-
-
 # function to create bar charts where negative and positive values are colored blue and red respectively
 msmBar <- function(data, valueType){ 
   if(valueType == "absolute"){
@@ -113,4 +110,26 @@ msmAnimatedDummyLines <- function(data, switchView){
     plot_ly(data(), x = ~Year, y = ~Value, frame = ~Key, type = "scatter", mode = "lines", color = ~as.factor(Key2),
             colors = myColor, line = list(simplify = F))
   }
+}
+msmBands <-function(data, values){
+  plot_ly(data(), x = ~year) %>% add_ribbons(
+    ymin = ~q1, 
+    ymax = ~q3, 
+    color = I("gray80"),
+    alpha = 0.3, name = 'q1-q3 bands') %>% add_trace(y = ~q2, name = 'Mean', type = 'scatter', mode = 'lines')
+}
+msmAnimatedBands <- function(data){
+  plot_ly(data(), x = ~Year, frame = ~Key)%>%
+    #add_ribbons(ymin = ~q1,
+  #              ymax = ~q3,
+   #             color = I("gray80"),
+    #            alpha = 0.3, name = 'q1-q3 bands')
+  #%>%
+    add_trace(y = ~q1, name = "q1", type = 'scatter', mode = 'lines',color = ~as.factor(Key),
+              line = list(simplify = F))%>%
+    add_trace(y = ~q2, name = "Mean", type = 'scatter', mode = 'lines',color = ~as.factor(Key),
+              line = list(simplify = F))%>%
+    add_trace(y = ~q3, name = "q3", type = 'scatter', mode = 'lines',color = ~as.factor(Key),
+              line = list(simplify = F))
+  
 }
