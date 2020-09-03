@@ -3,13 +3,13 @@
 ## Spatial function for routing options
 
 ## Function prepareSiloMap : Call the geographical database and filter according to the parameters in UI
-prepareSiloMap <- function (data, thisYear, zone_level, attribute, aggregationType){
+prepareSiloMap <- function (data, thisYear, zone_level, attribute, aggregationType, geoZones){
   print("Entering to prepareSiloMap")
-  ## Conditional to choose between aggregate or keep dissagregate
+  ## Conditional to choose between aggregate or keep dissaggregate
   if(zone_level == FALSE){
 
     joinTable <- filter(data ,year == thisYear)
-    spatialTable <- left_join(zones, joinTable, by="shp_id")
+    spatialTable <- left_join(geoZones, joinTable, by="shp_id")
     
     if(aggregationType == "average") {
       groupedTable <- spatialTable %>%
@@ -24,7 +24,7 @@ prepareSiloMap <- function (data, thisYear, zone_level, attribute, aggregationTy
 
   } else {
     joinTable <- filter(data,year == thisYear)
-    groupedTable <- left_join(zones, joinTable, by="shp_id")
+    groupedTable <- left_join(geoZones, joinTable, by="shp_id")
     if(aggregationType == "density"){
       groupedTable <-groupedTable%>% mutate(!!attribute := ((groupedTable[[attribute]] / shp_area) * 1000000 ))
     }
@@ -202,6 +202,35 @@ siloAspatialEvents <- function(eventsTable, optionsVector){
   eventsTable <-subset(eventsTable, event %in% optionsVector)
   eventsTable <-eventsTable%>%rename(Year = year, Key = event, Value =count)
   return(eventsTable)
+}
+siloAspatialRegions <- function(regionTable, varColumn){
+  
+  regionTable <- regionTable%>% group_by(year) %>% summarise(min = quantile(!!as.name(varColumn), probs = 0),
+                                                             q1 = quantile (!!as.name(varColumn), probs = 0.25),
+                                                             q2 = quantile (!!as.name(varColumn), probs = 0.50),
+                                                             q3 = quantile (!!as.name(varColumn), probs = 0.75),
+                                                             max = quantile(!!as.name(varColumn), probs = 1))
+  return(regionTable)
+}
+siloAspatialJobsReg <-function(regionTable){
+  print('You are in function siloAspatial Jobs regions')
+  print(regionTable)
+  regionJobs <- regionTable%>%tidyr::pivot_longer(
+    cols = (colnames(regionTable)[3:13]),
+    names_to = 'key',
+    values_to = 'Value'
+  )
+  regionJobs <- regionJobs %>% group_by(year,key)%>%summarise(min = quantile(Value, probs = 0),
+                                                              q1 = quantile(Value, probs = 0.25),
+                                                              q2 = quantile(Value, probs = 0.5),
+                                                              q3 = quantile(Value, probs = 0.75),
+                                                              max = quantile(Value, probs = 1))
+  regionJobs <-regionJobs%>%rename(Year = year)
+  
+  
+  print(regionJobs)
+  return(regionJobs)
+  
 }
 
 dummycall <-function(int){
