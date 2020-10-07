@@ -1,6 +1,6 @@
 ## SILO Dashboard PLUS
 
-##########################
+########################## Load Libraries ########################## 
 ## Load libraries
 library(shiny)
 library(shinyFiles)
@@ -21,18 +21,18 @@ library(tidyr) ## For data manipulation
 library(tidyverse) ## For data manipulation
 library(tmap)
 library(tmaptools)
-##########################
-### Data preparation
-
-## Set working directory
+########################## Data and extra files ########################## 
 
 setwd(here())
 
 ## Read external files for extra functions (to be checked)(fix in the latest version)
 
-source(paste(getwd(),"/visualizer_2/SILOVisualizer/functions/fileSettings.r", sep ="/"))  ## Load auxiliary files like labels, settings and shapefiles
+source(paste(getwd(),"/visualizer_2/SILOVisualizer/functions/fileSettings.r", sep ="/"))  ## Load auxiliary files like labels
 source(paste(here(),"visualizer/figureTableFunctions.R", sep ='/')) #contains functions for creating plots, maps and tables
 source(paste(getwd(),"/visualizer_2/SILOVisualizer/functions/SiloLogic.r", sep ="/"))
+source(paste(getwd(),"/visualizer_2/SILOVisualizer/functions/SiloFunctions.r", sep ="/"))
+source(paste(getwd(),"visualizer_2/SILOVisualizer/functions/fileReader_v02.r", sep ="/"))
+
 
 # create colors
 msmQualitative <- brewer.pal(12, "Set3")[c(1, 3:12)] #colors used for qualitative attributes
@@ -42,7 +42,7 @@ msmPastel <- brewer.pal(9, "Pastel1") #colors used for pie chart
 ##########################
 ### Dashboard Header
 
-ui = dashboardPagePlus(
+ui = dashboardPagePlus( 
     dashboardHeaderPlus(
         title = tagList(
             span(class = "logo-lg", "SILO Visualizer 2.0"),
@@ -98,6 +98,7 @@ ui = dashboardPagePlus(
                         selectInput("sIncome", h5("Select income class"), (sIncome))),
                     conditionalPanel("input.spatialLevel == 'accessibilities'",
                         selectInput("sAcc", h5("Select accessibility mode"), (sAccessibility))),
+                    checkboxInput("enable_regions","Enable region plots", value = FALSE),
                     ## View growth
                     conditionalPanel("input.comparison == true",
                         radioButtons("comparisonSelector", h4("Select type of comparison"),
@@ -109,7 +110,8 @@ ui = dashboardPagePlus(
                             choices = list("Scenario 1" = 1, "Scenario 2" = 2), selected = 1))),
                     numericInput("siloMapCategories", h4("Enter number of categories"), 7, 3, 15, 1),
                     radioButtons("siloMapStyle", h4("Select classification style"), c("pretty", "equal", "quantile"), inline = TRUE)
-                )),
+                    )
+                ),
                 conditionalPanel("input.renderType == 'aspatial'",
                     selectInput("aspatialLevel","Select aspatial attribute", c("Overview" = 'overview',
                         "Households" = 'households',
@@ -138,20 +140,19 @@ ui = dashboardPagePlus(
 ##########################
     ## Dashboard body
     dashboardBody(
-        box(
-            title = 'Graph visualization',
-            closable = FALSE,
-            status = "primary",
-            collapsible = TRUE,
-            enable_dropdown = TRUE,
-            width = NULL,
+        fluidRow(
             conditionalPanel(condition = "input.renderType == 'spatial'",
-                leafletOutput("siloMap", height = 900)
-                #wellPanel(textOutput("cnty"))
-                ),
-            conditionalPanel(condition = "input.renderType == 'aspatial'",
-                plotlyOutput("siloPlot", height = 900))
-        )
+                leafletOutput("siloMap", height = 900),
+                    conditionalPanel(condition = "input.enable_regions == 1",
+                        fluidRow(column(12, h4(" Regional plots ")),
+                        fluidRow(
+                            column (4, plotlyOutput("regCommPlot")),
+                            column (4, plotlyOutput("avLandPlot")),
+                            column (4, plotlyOutput("jobsBySectorPlot")))))
+        )),
+        fluidRow(
+        conditionalPanel(condition = "input.renderType == 'aspatial'",
+            plotlyOutput("siloPlot", height = 950)))
     ),
 ##########################
     ## Right sidebar
