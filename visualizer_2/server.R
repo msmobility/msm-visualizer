@@ -1,7 +1,7 @@
 ## Server logic
-
 shinyServer(function(input, output, session) {
     
+    ################################# File reader plugin  #################################
     ## Directory selector original scenario
     shinyDirChoose(input, 'dir', roots=c(home = getwd()), filetypes=c('csv','shp'))
     global <- reactiveValues(datapath = getwd())
@@ -36,52 +36,44 @@ shinyServer(function(input, output, session) {
                      global$datapath2 <-
                          file.path(getwd(), paste(unlist(dir2()$path[-1]), collapse = .Platform$file.sep))
                  })
-    ## File loader
-    
+    ################################# File reader functions #################################
     observeEvent(input$update, {loadfiles()})
     
     loadfiles <- reactive({
         if (global$datapath == getwd()){}
         else {
-            print(global$datapath)
-            
-            ## Define all tables
-            global$o_aveHhsize <- read.csv(paste(global$datapath,"aveHhSize.csv",sep="/", collapse = NULL))
-            global$o_c_owne <- read.csv(paste(global$datapath,"carOwnership.csv",sep="/", collapse = NULL))
-            global$o_com_di <- read.csv(paste(global$datapath,"commutingDistance.csv",sep="/", collapse = NULL))
-            global$o_dwelli <- read.csv(paste(global$datapath,"dwellings.csv",sep="/", collapse = NULL))
-            global$o_eventc <- read.csv(paste(global$datapath,"eventCounts.csv",sep="/", collapse = NULL))
-            global$o_hhAvIn <- read.csv(paste(global$datapath,"hhAveIncome.csv",sep="/", collapse = NULL))
-            global$o_hhSatR <- read.csv(paste(global$datapath,"hhSatisfactionByRegion.csv",sep="/", collapse = NULL))
-            global$o_hhSize <- read.csv(paste(global$datapath,"hhSize.csv",sep="/", collapse = NULL))
-            global$o_hhType <- read.csv(paste(global$datapath,"hhType.csv",sep="/", collapse = NULL))
-            global$o_laPaRa <- read.csv(paste(global$datapath,"labourParticipationRate.csv",sep="/", collapse = NULL))
-            global$o_lanReg <- read.csv(paste(global$datapath,"landRegions.csv",sep="/"))
-            global$o_popYea <- read.csv(paste(global$datapath,"popYear.csv",sep="/", collapse = NULL))
-            global$o_spatialData <-read.csv(paste(global$datapath,"resultFileSpatial.csv",sep="/", collapse= NULL))
-            global$o_spatialData <-rename(global$o_spatialData, "shp_id" = "zone")
-            
-            ## New parsed files, run the python code first
-            global$o_hhReIn <- read.csv(paste(global$datapath,"hhRentAndIncome.csv",sep="/", collapse = NULL))
-            global$o_perMig <- read.csv(paste(global$datapath,"persMigrants.csv",sep="/", collapse = NULL))
-            global$o_dwelQu <- read.csv(paste(global$datapath,"dwellingQualityLevel.csv",sep="/", collapse = NULL))
-            global$o_perRac <- read.csv(paste(global$datapath,"persByRace.csv",sep="/", collapse = NULL))
-            global$o_regCoT <- read.csv(paste(global$datapath,"regionAvCommutingTime.csv",sep="/", collapse = NULL))
-            global$o_regJoS <- read.csv(paste(global$datapath,"jobsBySectorAndRegion.csv",sep="/", collapse = NULL))
+            ## File reader, loop fileList vector and store variables in session$userData$scenario_filename
+            j= 1
+            for(i in fileList){
+                filePath = paste(global$datapath,i,sep="/", collapse = NULL)
+                file_exists <- file_test("-f", filePath) ##Test path
+                if(file_exists == TRUE){
+                    print(filePath)
+                    varName <-fileNames[j]
+                    varName <-paste('o',varName, sep='_')
+                    # Store databases in session$userData, each database starts with o_ + values found in fileNames
+                    session$userData[[varName]] <- read.csv(paste(global$datapath,filelist[j],sep="/", collapse = NULL))
+                }else{
+                    print(paste("Warning , ",filePath, " does not exists in this scenario, dependent plots will be hidden"))
+                    ## Here, pending to chose a modify options from vectors :
+                }
+                j=j+1
+            }
+            session$userData$o_spatialData <-rename(session$userData$o_spatialData, "shp_id" = "zone")
         }
-        ## Select implementation data
+
         pathElements <-str_split(global$datapath, '/', simplify = TRUE)
         global$implementation_value <-pathElements[length(pathElements)-1]
     })
     ## Update elements from implementation
     observeEvent(input$update, {updateData()})
     updateData <-reactive({
-        parameters <- unlist(filter(configuration, implementation == global$implementation_value))
-        initialYear <- as.numeric(parameters[7])
-        finalYear <- as.numeric(parameters[8])
+        initialYear <- as.numeric(min(session$userData$o_popYea$year))
+        #initialYear <- as.numeric(parameters[7])
+        finalYear <- as.numeric(max(session$userData$o_popYea$year))
+        #finalYear <- as.numeric(parameters[8])
         updateSliderInput(session, "year", min = initialYear, max = finalYear)
-        global$zones <- st_read(paste(here(),parameters[9],sep="/"))
-        
+        global$zones <- st_read(paste(here(),"shapefiles",global$implementation_value,"zone_system.shp",sep="/"))
     })
     ## Scenario File loader
     observeEvent(input$update, {loadfiles2()})
@@ -89,29 +81,24 @@ shinyServer(function(input, output, session) {
     loadfiles2 <- reactive({
         if (global$datapath2 == getwd()){}
         else {
-            print(global$datapath2)
-            
-            ## Define all tables
-            global$c_aveHhsize <- read.csv(paste(global$datapath2,"aveHhSize.csv",sep="/", collapse = NULL))
-            global$c_c_owne <- read.csv(paste(global$datapath2,"carOwnership.csv",sep="/", collapse = NULL))
-            global$c_com_di <- read.csv(paste(global$datapath2,"commutingDistance.csv",sep="/", collapse = NULL))
-            global$c_dwelli <- read.csv(paste(global$datapath2,"dwellings.csv",sep="/", collapse = NULL))
-            global$c_eventc <- read.csv(paste(global$datapath2,"eventCounts.csv",sep="/", collapse = NULL))
-            global$c_hhAvIn <- read.csv(paste(global$datapath2,"hhAveIncome.csv",sep="/", collapse = NULL))
-            global$c_hhSatR <- read.csv(paste(global$datapath2,"hhSatisfactionByRegion.csv",sep="/", collapse = NULL))
-            global$c_hhSize <- read.csv(paste(global$datapath2,"hhSize.csv",sep="/", collapse = NULL))
-            global$c_hhType <- read.csv(paste(global$datapath2,"hhType.csv",sep="/", collapse = NULL))
-            global$c_laPaRa <- read.csv(paste(global$datapath2,"labourParticipationRate.csv",sep="/", collapse = NULL))
-            global$c_lanReg <- read.csv(paste(global$datapath2,"landRegions.csv",sep="/", collapse = NULL))
-            global$c_popYea <- read.csv(paste(global$datapath2,"popYear.csv",sep="/", collapse = NULL))
-            global$c_spatialData <-read.csv(paste(global$datapath2,"resultFileSpatial.csv",sep="/", collapse= NULL))
-            global$c_spatialData <-rename(global$c_spatialData, "shp_id" = "zone")
-            
-            ## New parsed files, run the python code first
-            global$c_hhReIn <- read.csv(paste(global$datapath2,"hhRentAndIncome.csv",sep="/", collapse = NULL))
-            #global$c_perMig <- read.csv(paste(global$datapath2,"persMigrants.csv",sep="/", collapse = NULL))
-            global$c_dwelQu <- read.csv(paste(global$datapath2,"dwellingQualityLevel.csv",sep="/", collapse = NULL))
-            #global$c_perRac <- read.csv(paste(global$datapath2,"persByRace.csv",sep="/", collapse = NULL))
+            ## File reader, loop fileList vector and store variables in session$userData$scenario_filename
+            j= 1
+            for(l in fileList){
+                filePath2 = paste(global$datapath2,l,sep="/", collapse = NULL)
+                file_exists <- file_test("-f", filePath2) ##Test path
+                if(file_exists == TRUE){
+                    print(filePath2)
+                    varName <-fileNames[j]
+                    varName <-paste('c',varName, sep='_')
+                    # Store databases in session$userData, each database starts with o_ + values found in fileNames
+                    session$userData[[varName]] <- read.csv(paste(global$datapath2,filelist[j],sep="/", collapse = NULL))
+                }else{
+                    print(paste("Warning, ",filePath2, " does not exists in this scenario, dependent plots will be hidden"))
+                    ## Here, pending to chose a modify options from vectors :
+                }
+                j=j+1
+            }
+            session$userData$c_spatialData <-rename(session$userData$c_spatialData, "shp_id" = "zone")
         }
     })
     
@@ -120,7 +107,7 @@ shinyServer(function(input, output, session) {
     
     ## Plot Map
     output$siloMap <- renderLeaflet({
-        print(input$update)
+        #print(input$update)
         n <-dummyfunc()
         
         ## Map color selection
@@ -144,41 +131,35 @@ shinyServer(function(input, output, session) {
                input$siloMapStyle, input$siloMapCategories)
         
     })
-    
-#################################
+
+    ################################# Spatial Data procedures #################################
     # Modularize spatial inputs
     spatialData <-reactive({
         n <-dummyfunc()
-        print("Module spatialData is running")
         if(input$spatialLevel == 'dwellings'){
-            
             attribute <- input$sDwelling
             aggregationType <- "density"
-            
         }else if(input$spatialLevel == 'income'){
             attribute <- input$sIncome
             aggregationType <- "density"
-            
         }else if(input$spatialLevel == 'accessibilities'){
             attribute <- input$sAcc
             aggregationType <- "average"
-            
         }else if(input$spatialLevel == 'avePrice'){
             attribute <- input$spatialLevel
             aggregationType <- "average"
-            
         }else {
             attribute = input$spatialLevel
             aggregationType <- "density"
-            
         }
         ## Database logic choose scenario and comparison type
         if(input$comparisonSelector ==1){
             
             isComparison <-TRUE
             legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute, isComparison)
-            originalDataSet <-prepareSiloMap(global$o_spatialData, input$year, input$zone_level, attribute, aggregationType, global$zones)
-            scenarioDataSet <-prepareSiloMap(global$c_spatialData, input$year, input$zone_level, attribute, aggregationType, global$zones)
+            #originalDataSet <-prepareSiloMap(empty_vec$spatialData, input$year, input$zone_level, attribute, aggregationType, global$zones)
+            originalDataSet <-prepareSiloMap(session$userData$o_spatialData, input$year, input$zone_level, attribute, aggregationType, global$zones)
+            scenarioDataSet <-prepareSiloMap(session$userData$c_spatialData, input$year, input$zone_level, attribute, aggregationType, global$zones)
             
             groupedTable <- compareScenarios(originalDataSet, scenarioDataSet,attribute)  
             
@@ -187,36 +168,32 @@ shinyServer(function(input, output, session) {
             isComparison <-TRUE
             
             legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute, isComparison)
-            originalDataSet <-prepareSiloMap(global$o_spatialData, initialYear, input$zone_level, attribute, aggregationType, global$zones)
-            scenarioDataSet <-prepareSiloMap(global$o_spatialData, input$year, input$zone_level, attribute, aggregationType, global$zones)
+            originalDataSet <-prepareSiloMap(session$userData$o_spatialData, initialYear, input$zone_level, attribute, aggregationType, global$zones)
+            scenarioDataSet <-prepareSiloMap(session$userData$o_spatialData, input$year, input$zone_level, attribute, aggregationType, global$zones)
             groupedTable <- compareScenarios(originalDataSet, scenarioDataSet,attribute)
             
         } else {
             if(input$scenarioSelector == 1){
-                spatialDataSet <-global$o_spatialData
+                spatialDataSet <-session$userData$o_spatialData
             } else {
-                spatialDataSet <-global$c_spatialData
+                spatialDataSet <-session$userData$c_spatialData
             }
             
             isComparison <-FALSE
             legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute, isComparison)
-            print("Entering groupedTable")
             groupedTable <-prepareSiloMap(spatialDataSet, input$year, input$zone_level, attribute, aggregationType, global$zones)
-            print("Groupedtable finished")
             
         }
-        print("Module spatialData finished correctly")
-        print(groupedTable)
+
         
         return(list(groupedTable, legend, attribute))
         
-    })
-    #################################
+    }) 
+    ################################# Test  #################################
     ## Experimental map reactivity
-    geo <- observeEvent(input$siloMap_shape_click, {
-        p <- input$siloMap_shape_click
-        print(p[1])
-    })
+    #geo <- observeEvent(input$siloMap_shape_click, {
+    #    p <- input$siloMap_shape_click
+    #})
     #################################
     output$gisTable <- renderDataTable(
         select(as.data.frame(spatialData()[1]),-geometry)
@@ -227,16 +204,16 @@ shinyServer(function(input, output, session) {
     ##  select(as.data.frame(global$exportTable),-geometry)
     ## Downloader
     output$downloadData <- downloadHandler(
-        filename = function() {
+        filename <- function() {
             paste("export_example", ".csv", sep = "")
         },
-        content = function(file) {
+        content <- function(file) {
             write.csv(select(as.data.frame(spatialData()[1]),-geometry), file, row.names = TRUE)
         }
     )
     output$downloadShape<-downloadHandler(
-        filename = function() { paste("shpExport","zip", sep = ".") },
-        content = function(file){
+        filename <- function() { paste("shpExport","zip", sep = ".") },
+        content <- function(file){
             data <- spatialData()
             temp_shp <- tempdir()
             st_write(data, "temp_shp.shp")
@@ -266,241 +243,257 @@ shinyServer(function(input, output, session) {
         
         if(input$aspatialLevel == 'overview'){
             if(input$comparison == FALSE){
-                dataTable <- siloAspatialOverview(global$o_popYea, global$o_dwelli, global$o_hhSize)
+                dataTable <- siloAspatialOverview(session$userData$o_popYea, session$userData$o_dwelli, session$userData$o_hhSize)
             } else {
-                o_overview <- siloAspatialOverview(global$o_popYea, global$o_dwelli, global$o_hhSize)
-                c_overview <- siloAspatialOverview(global$c_popYea, global$c_dwelli, global$c_hhSize)
+                o_overview <- siloAspatialOverview(session$userData$o_popYea, session$userData$o_dwelli, session$userData$o_hhSize)
+                c_overview <- siloAspatialOverview(session$userData$c_popYea, session$userData$c_dwelli, session$userData$c_hhSize)
                 dataTable <- siloAspatialTableComparator(o_overview, c_overview)
             }
         }else if (input$aspatialLevel == 'households'){
             if(input$HHLevel == 'hhSizInc'){
                 if(input$comparison == FALSE){
-                    dataTable <- siloAspatialHHSizeIncome(global$o_hhType)
+                    dataTable <- siloAspatialHHSizeIncome(session$userData$o_hhType)
                 } else {
-                    o_households <- siloAspatialHHSizeIncome(global$o_hhType)
-                    c_households <- siloAspatialHHSizeIncome(global$c_hhType)
+                    o_households <- siloAspatialHHSizeIncome(session$userData$o_hhType)
+                    c_households <- siloAspatialHHSizeIncome(session$userData$c_hhType)
                     dataTable <- siloAspatialTableComparator(o_households, c_households)
                 }
             } else if(input$HHLevel == 'hhRace'){
                 if(input$comparison == FALSE){
-                    dataTable <- siloAspatialRace(global$o_spatialData)
+                    dataTable <- siloAspatialRace(session$userData$o_spatialData)
                     
                 } else {
-                    o_households <- siloAspatialRace(global$o_spatialData)
-                    c_households <- siloAspatialRace(global$c_spatialData)
+                    o_households <- siloAspatialRace(session$userData$o_spatialData)
+                    c_households <- siloAspatialRace(session$userData$c_spatialData)
                     dataTable <- siloAspatialTableComparator(o_households, c_households)
                 }
             } else if(input$HHLevel =='hhSize'){
                 if(input$comparison == FALSE){
-                    dataTable <- siloAspatialHHSize(global$o_hhType)
+                    dataTable <- siloAspatialHHSize(session$userData$o_hhType)
                 }else {
-                    o_hhSize <-siloAspatialHHSize(global$o_hhType)
-                    c_hhSize <-siloAspatialHHSize(global$c_hhType)
+                    o_hhSize <-siloAspatialHHSize(session$userData$o_hhType)
+                    c_hhSize <-siloAspatialHHSize(session$userData$c_hhType)
                     dataTable <- siloAspatialTableComparator(o_hhSize, c_hhSize)
                 }
             }else if(input$HHLevel == 'hhAvSize'){
                 if(input$comparison == FALSE){
-                    dataTable <- global$o_aveHhsize
+                    dataTable <- session$userData$o_aveHhsize
                 }else {
-                    dataTable <- siloAspatialTableComparator(global$o_aveHhsize, global$c_aveHhsize)
+                    dataTable <- siloAspatialTableComparator(session$userData$o_aveHhsize, session$userData$c_aveHhsize)
                 }
             }else if(input$HHLevel =='hhInc'){
                 if(input$comparison == FALSE){
-                    dataTable <- global$o_hhAvIn  
+                    dataTable <- session$userData$o_hhAvIn  
                 }else{
-                    global$o_hhAvIn[['variable']] <-as.character(global$o_hhAvIn[['variable']])
-                    global$c_hhAvIn[['variable']] <-as.character(global$c_hhAvIn[['variable']])
-                    dataTable <- siloAspatialTableComparator(global$o_hhAvIn, global$c_hhAvIn)
+                    session$userData$o_hhAvIn[['variable']] <-as.character(session$userData$o_hhAvIn[['variable']])
+                    session$userData$c_hhAvIn[['variable']] <-as.character(session$userData$c_hhAvIn[['variable']])
+                    dataTable <- siloAspatialTableComparator(session$userData$o_hhAvIn, session$userData$c_hhAvIn)
                 }
             }else if(input$HHLevel == 'hhCarOwnLev'){
                 if(input$comparison == FALSE){
-                    global$o_c_owne[['carOwnershipLevel']]<-as.character(global$o_c_owne[['carOwnershipLevel']])
-                    dataTable <- global$o_c_owne
-                    print(global$o_c_owne)
+                    dataTable = siloAspatialHHCarOwnership(session$userData$o_c_owne)
+                    #global$o_c_owne[['carOwnershipLevel']]<-as.character(global$o_c_owne[['carOwnershipLevel']])
+                    #dataTable <- global$o_c_owne
+                    #print(global$o_c_owne)
                 }else{
-                    global$o_c_owne[['carOwnershipLevel']]<-as.character(global$o_c_owne[['carOwnershipLevel']])
-                    global$c_c_owne[['carOwnershipLevel']]<-as.character(global$c_c_owne[['carOwnershipLevel']])
-                    dataTable <- siloAspatialTableComparator(global$o_c_owne, global$c_c_owne)
+                    session$userData$o_c_owne[['carOwnershipLevel']]<-as.character(session$userData$o_c_owne[['carOwnershipLevel']])
+                    session$userData$c_c_owne[['carOwnershipLevel']]<-as.character(session$userData$c_c_owne[['carOwnershipLevel']])
+                    dataTable <- siloAspatialTableComparator(session$userData$o_c_owne, session$userData$c_c_owne)
                 }
             }else if(input$HHLevel == 'hhRentIncome'){
                 if(input$comparison == FALSE){
-                    dataTable <- siloAspatialHHRentIncome(global$o_hhReIn)
+                    dataTable <- siloAspatialHHRentIncome(session$userData$o_hhReIn)
+                    #print("the datatable is")
+                    #print(dataTable)
                 }else{
-                    o_hhRentInc <- siloAspatialHHRentIncome(global$o_hhReIn)
-                    c_hhRentInc <- siloAspatialHHRentIncome(global$c_hhReIn)
+                    o_hhRentInc <- siloAspatialHHRentIncome(session$userData$o_hhReIn)
+                    c_hhRentInc <- siloAspatialHHRentIncome(session$userData$c_hhReIn)
+                    
                     dataTable <- siloAspatialTableComparator(o_hhRentInc, c_hhRentInc)
+                    #print("the datatable is")
+                    #print(dataTable)
                 }
             }else if(input$HHLevel == 'hhAvRent'){
                 if(input$comparison == FALSE){
-                    dataTable <- siloAspatialHHAvRent(global$o_hhReIn)
+                    dataTable <- siloAspatialHHAvRent(session$userData$o_hhReIn)
                 }else{
-                    o_hhRentInc <- siloAspatialHHAvRent(global$o_hhReIn)
-                    c_hhRentInc <- siloAspatialHHAvRent(global$c_hhReIn)
+                    o_hhRentInc <- siloAspatialHHAvRent(session$userData$o_hhReIn)
+                    c_hhRentInc <- siloAspatialHHAvRent(session$userData$c_hhReIn)
                     dataTable <- siloAspatialTableComparator(o_hhRentInc,c_hhRentInc)
                 }
             }
         } else if (input$aspatialLevel == 'persons'){
             if(input$personsLevel == 'peAgeGend'){
                 if(input$comparison == FALSE){
-                    print('we are in the correct place')
-                    dataTable <-siloAspatialPopAge(global$o_popYea)    
+                    dataTable <-siloAspatialPopAge(session$userData$o_popYea)    
                 }else{
-                    o_popAge <-siloAspatialPopAge(global$o_popYea)
-                    c_popAge <-siloAspatialPopAge(global$c_popYea)
+                    o_popAge <-siloAspatialPopAge(session$userData$o_popYea)
+                    c_popAge <-siloAspatialPopAge(session$userData$c_popYea)
                     dataTable <- siloAspatialTableComparator(o_popAge, c_popAge)
                 }
             }else if(input$personsLevel == 'peRace'){
                 if(input$comparison == FALSE){
-                    dataTable <- siloAspatialPopRace(global$o_perRac)
+                    dataTable <- siloAspatialPopRace(session$userData$o_perRac)
                 }else{
-                    o_perRace <- siloAspatialPopRace(global$o_perRac)
-                    c_perRace <- siloAspatialPopRace(global$c_perRac)
+                    o_perRace <- siloAspatialPopRace(session$userData$o_perRac)
+                    c_perRace <- siloAspatialPopRace(session$userData$c_perRac)
                 }
             }else if (input$personsLevel == 'peLaborPartRate'){
                 if(input$comparison == FALSE){
-                    dataTable <-siloAspatialPopParticippation(global$o_laPaRa)
+                    dataTable <-siloAspatialPopParticippation(session$userData$o_laPaRa)
                 }else{
-                    o_popPart <-siloAspatialPopParticippation(global$o_laPaRa)
-                    c_popPart <-siloAspatialPopParticippation(global$c_laPaRa)
+                    o_popPart <-siloAspatialPopParticipation(session$userData$o_laPaRa)
+                    c_popPart <-siloAspatialPopParticipation(session$userData$c_laPaRa)
                     dataTable <-siloAspatialTableComparator(o_popPart, c_popPart)
                 }
                     
             }else if(input$personsLevel == 'pemigration'){
                 if(input$comparison == FALSE){
-                    dataTable <-siloAspatialpopMigration(global$o_perMig)    
+                    dataTable <-siloAspatialpopMigration(session$userData$o_perMig)    
                 }else{
-                    o_popMig <-siloAspatialpopMigration(global$o_perMig)
-                    c_popMig <-siloAspatialpopMigration(global$c_perMig)
+                    o_popMig <-siloAspatialpopMigration(session$userData$o_perMig)
+                    c_popMig <-siloAspatialpopMigration(session$userData$c_perMig)
                     dataTable <-siloAspatialTableComparator(o_popMig, c_popMig)
                 }
             }
         } else if (input$aspatialLevel =='dwellings'){
             if (input$dwellingsLevel == 'dwellQuality'){
                 if(input$comparison == FALSE){
-                    dataTable <-siloAspatialDwellingQuality(global$o_dwelQu)
+                    dataTable <-siloAspatialDwellingQuality(session$userData$o_dwelQu)
                 }else{
-                    o_dewllQuality <-siloAspatialDwellingQuality(global$o_dwelQu)
-                    c_dewllQuality <-siloAspatialDwellingQuality(global$c_dwelQu)
+                    o_dewllQuality <-siloAspatialDwellingQuality(session$userData$o_dwelQu)
+                    c_dewllQuality <-siloAspatialDwellingQuality(session$userData$c_dwelQu)
                     dataTable <-siloAspatialTableComparator(o_dewllQuality, c_dewllQuality)
                 }
             }else if(input$dwellingsLevel == 'dwellType'){
                 if(input$comparison == FALSE){
-                    dataTable <- siloAspatialDwellings(global$o_dwelli,'count')
+                    dataTable <- siloAspatialDwellings(session$userData$o_dwelli,'count')
                 }else{
-                    o_dwellType <- siloAspatialDwellings(global$o_dwelli,'count')
-                    c_dwellType <- siloAspatialDwellings(global$c_dwelli,'count')
+                    o_dwellType <- siloAspatialDwellings(session$userData$o_dwelli,'count')
+                    c_dwellType <- siloAspatialDwellings(session$userData$c_dwelli,'count')
                     dataTable <- siloAspatialTableComparator(o_dwellType, c_dwellType)
                 }
                 
             }else if(input$dwellingsLevel == 'dwellAvMonPrice'){
                 if(input$comparison == FALSE){
-                    dataTable <- siloAspatialDwellings(global$o_dwelli,'price')
+                    dataTable <- siloAspatialDwellings(session$userData$o_dwelli,'price')
                 }else{
-                    o_dwellAvPr <-siloAspatialDwellings(global$o_dwelli,'price')
-                    o_dwellAvPr <-siloAspatialDwellings(global$c_dwelli,'price')
+                    o_dwellAvPr <-siloAspatialDwellings(session$userData$o_dwelli,'price')
+                    c_dwellAvPr <-siloAspatialDwellings(session$userData$c_dwelli,'price')
                     dataTable <- siloAspatialTableComparator(o_dwellAvPr, c_dwellAvPr)
                 }
                 
             }else if(input$dwellingsLevel == 'dwellVacancy'){
                 if(input$comparison == FALSE){
-                    dataTable <- siloAspatialDwellings(global$o_dwelli,'vacancy')
+                    dataTable <- siloAspatialDwellings(session$userData$o_dwelli,'vacancy')
                     
                 }else{
-                    o_dwellVac <-siloAspatialDwellings(global$o_dwelli,'vacancy')
-                    c_dwellVac <-siloAspatialDwellings(global$c_dwelli,'vacancy')
+                    o_dwellVac <-siloAspatialDwellings(session$userData$o_dwelli,'vacancy')
+                    c_dwellVac <-siloAspatialDwellings(session$userData$c_dwelli,'vacancy')
                     dataTable <- siloAspatialTableComparator(o_dwellVac, c_dwellVac)
                 }
             }
         } else if (input$aspatialLevel =='regional'){
             if(input$regionalLevel == 'reAvCommDist'){
                 varColumn = 'minutes'
-                dataTable <- global$o_regCoT
+                dataTable <- session$userData$o_regCoT
                 dataTable<- siloAspatialRegions(dataTable, varColumn)
             }else if(input$regionalLevel == 'reAvailableLand'){
                 varColumn = 'land'
-                dataTable <- global$o_lanReg
+                dataTable <- session$userData$o_lanReg
                 dataTable<- siloAspatialRegions(dataTable, varColumn)
             }else if (input$regionalLevel == 'reTotalJobs'){
                 varColumn = 'total'
-                dataTable <- global$o_regJoS
+                dataTable <- session$userData$o_regJoS
                 dataTable<- siloAspatialRegions(dataTable, varColumn)
             }else if(input$regionalLevel == 'reJobsSect'){
-                print(global$o_lanReg)
-                dataTable <- siloAspatialJobsReg(global$o_regJoS)
+                dataTable <- siloAspatialJobsReg(session$userData$o_regJoS)
             }
-            
-            
-            
-            
-            
         } else if (input$aspatialLevel == 'events'){
-            print('Entering to the events logic')
             if(input$eventsLevel == 'hhEvents'){
                if(input$comparison == FALSE){
-                   print('Entering to hh events logic')
-                    dataTable <-siloAspatialEvents(global$o_eventc, hhEvents)
+                    dataTable <-siloAspatialEvents(session$userData$o_eventc, hhEvents)
                }else{
-                   dataTable <-siloAspatialEvents(global$o_eventc, hhEvents)
+                   o_eventCount <-siloAspatialEvents(session$userData$o_eventc, hhEvents)
+                   c_eventCount <-siloAspatialEvents(session$userData$c_eventc, hhEvents)
+                   dataTable <- siloAspatialTableComparator(o_eventCount, c_eventCount)
                }
             }else if(input$eventsLevel == 'peEvents'){
                 if(input$comparison == FALSE){
-                    print('Entering to persons events logic')
-                     dataTable <-siloAspatialEvents(global$o_eventc, perEvents)
+                     dataTable <-siloAspatialEvents(session$userData$o_eventc, perEvents)
+                }else{
+                    o_eventCount <-siloAspatialEvents(session$userData$o_eventc, perEvents)
+                    c_eventCount <-siloAspatialEvents(session$userData$c_eventc, perEvents)
+                    dataTable <- siloAspatialTableComparator(o_eventCount, c_eventCount)
                 }    
             }else if(input$eventsLevel == 'dwellEvents'){
                 if(input$comparison == FALSE){
-                    print('Entering to dwelling events logic')
-                    dataTable <-siloAspatialEvents(global$o_eventc, dwellEvents)
+                    dataTable <-siloAspatialEvents(session$userData$o_eventc, dwellEvents)
+                }else{
+                    o_eventCount <-siloAspatialEvents(session$userData$o_eventc, dwellEvents)
+                    c_eventCount <-siloAspatialEvents(session$userData$c_eventc, dwellEvents)
+                    dataTable <- siloAspatialTableComparator(o_eventCount, c_eventCount)
                 }
-                
             }
-            
         }
         return(dataTable)
-        
+    })
+    ###################################
+    ### Regional subplots ###
+    regionalTrigger <-eventReactive(input$siloMap_shape_click, {dummycall2(1)})
+    ClickOnMapCommTime <- reactive({
+        n <- regionalTrigger()
+        database <- siloRegionalPlot(session$userData$o_regCoT, "commuteTime",input$siloMap_shape_click[1])
+        if(input$comparison == TRUE){
+            comparison <-siloRegionalPlot(session$userData$c_regCoT, "commuteTime",input$siloMap_shape_click[1])
+            database <- siloAspatialTableComparator(database, comparison)
+        }
+        return (database)
+    })
+    ClickOnMapAvLand <- reactive({
+        n <- regionalTrigger()
+        database <- siloRegionalPlot(session$userData$o_lanReg, "availableLand",input$siloMap_shape_click[1])
+        if(input$comparison == TRUE){
+            comparison <- siloRegionalPlot(session$userData$c_lanReg, "availableLand",input$siloMap_shape_click[1])
+            database <- siloAspatialTableComparator(database, comparison)
+        }
+        return (database)
+    })
+    ClickOnMapJobs<- reactive({
+        n <- regionalTrigger()
+        database <- siloRegionalPlot(session$userData$o_regJoS, "jobsByType",input$siloMap_shape_click[1])
+        if(input$comparison == TRUE){
+            comparison <- siloRegionalPlot(session$userData$c_regJoS, "jobsByType",input$siloMap_shape_click[1])
+            database <- siloAspatialTableComparator(database, comparison)     
+        }
+        return (database)
     })
     
-    
+######################################################################################################################### 
+##Figure Logic
     fig <- reactive({
         msmSequential <- viridisLite::viridis(10, direction = -1)
         if(input$aspatialLevel == 'overview'){
             ## Parametrize
+            fig <-msmSimpleLines(getAspatialData, msmSequential)
             
-            fig <-plot_ly(getAspatialData(), x = ~popYear)
-            
-            fig <-fig%>%add_trace(y = ~population, name = 'Population', type = 'scatter', mode = 'lines')
-            fig <-fig%>%add_trace(y = ~men, name = 'Men',  type = 'scatter', mode ='lines') 
-            fig <-fig%>%add_trace(y = ~women, name = 'Women',  type = 'scatter', mode ='lines')
-            fig <-fig%>%add_trace(y = ~households, name = 'Households',  type = 'scatter', mode ='lines') 
-            fig <-fig%>%add_trace(y = ~dwellings, name = 'Dwellings',  type = 'scatter', mode ='lines')
             fig<- fig%>%layout(title= "Overview")
         }else if (input$aspatialLevel == 'households'){
             if(input$HHLevel == 'hhSizInc'){
                 fig <- msmAnimatedLines(getAspatialData,msmSequential,input$switchView)
             } else if(input$HHLevel == 'hhRace'){
-                fig <- plot_ly(getAspatialData(), x= ~year)
-                fig <- fig%>% add_trace(y= ~shWhite, name ='White', type = 'scatter', mode = 'lines')
-                fig <- fig%>% add_trace(y= ~shBlack, name ='Black', type = 'scatter', mode = 'lines')
-                fig <- fig%>% add_trace(y= ~shHispanic, name ='Hispanic', type = 'scatter', mode = 'lines')
-                fig <- fig%>% add_trace(y= ~shOther, name ='Other', type = 'scatter', mode = 'lines')
+                fig <-msmSimpleLines(getAspatialData, msmSequential)
                 fig <- fig%>% layout(title = "Households by Race")
             } else if(input$HHLevel == 'hhSize'){
-                
-                #fig<-msmSimpleLines(getAspatialData, msmSequential)
-                
                 fig <- plot_ly(getAspatialData(), x= ~Year, y= ~Households, type = 'scatter', mode = 'markers', 
                                         color = ~hh_size,colors = msmSequential, line = list(simplify = F))
-                #fig<-plot_ly(getAspatialData(), x = ~year, y = ~Households, type = "scatter", mode = "lines", color = ~as.factor(hh_size), colors = msmSequential)
             }else if(input$HHLevel == 'hhAvSize'){
                 fig <-plot_ly(getAspatialData(), x = ~year)
                 fig<-fig%>%add_trace(y= ~size, type='scatter', mode = 'lines')
-                #fig<- plot_ly(getAspatialData(), X=~year, y= ~size, type='scatter', mode='markers',
-                #              colors = msmSequential, line = list(simplify = F))
             }else if(input$HHLevel =='hhInc'){
-                fig <-plot_ly(getAspatialData(), x=~year, y=~value, type='scatter', color=~variable, colors = msmSequential, line = list(simplify = F))
-
+                fig <-msmSimpleLines(getAspatialData, msmSequential)
             }else if(input$HHLevel == 'hhCarOwnLev'){
-                fig<-plot_ly(getAspatialData(), x=~year, y=~households, type='scatter', color=~carOwnershipLevel, colors = msmSequential, line = list(simplify = F))
+                fig <-msmSimpleLines(getAspatialData, msmSequential)
             }else if(input$HHLevel == 'hhRentIncome'){
                 fig <- msmAnimatedLines(getAspatialData,msmSequential,input$switchView)
             }else if(input$HHLevel == 'hhAvRent'){
@@ -509,7 +502,6 @@ shinyServer(function(input, output, session) {
         }else if (input$aspatialLevel == 'persons'){
             if(input$personsLevel == 'peAgeGend'){
                 if(input$pyramid == TRUE){
-                    
                     fig<- msmPyramid(getAspatialData, msmSequential[c(3, 4)], c(-60000, -40000, -20000, 0, 20000, 40000, 60000),
                                      c("60k", "40k", "20k", "0", "20k", "40k", "60k"))
                 }else{
@@ -530,17 +522,35 @@ shinyServer(function(input, output, session) {
             }else{
                 fig <-msmBands(getAspatialData, 'minutes')
             }
-            
-            
         }else if(input$aspatialLevel == 'events'){
             fig <-msmSimpleLines(getAspatialData, msmSequential)
         }
         return(fig)
     })
+    ### Click on map figures
+    figReg1 <- reactive({
+        msmSequential <- viridisLite::viridis(10, direction = -1)
+        msmSimpleLines(ClickOnMapCommTime, msmSequential)
+    })
+    figReg2 <- reactive({
+        msmSequential <- viridisLite::viridis(10, direction = -1)
+        msmSimpleLines(ClickOnMapAvLand, msmSequential)
+    })
+    figReg3 <- reactive({
+        msmSequential <- viridisLite::viridis(10, direction = -1)
+        msmAnimatedLines(ClickOnMapJobs, msmSequential, FALSE)
+    })
     
     output$siloPlot <-renderPlotly(
         fig()
     )
-
-        
+    output$regCommPlot <-renderPlotly(
+        figReg1()
+    )
+    output$avLandPlot <- renderPlotly(
+        figReg2()
+    )
+    output$jobsBySectorPlot <-renderPlotly(
+        figReg3()
+    )
 })
