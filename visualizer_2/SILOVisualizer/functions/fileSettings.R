@@ -18,9 +18,7 @@ finalYear <- as.numeric(parameters[8])
 
 zones <- st_read(paste(here(),parameters[9],sep="/"))
 
-
-
-## Create lists for aspatial categories
+################################## Aspatial Categories ##################################
 
 aHH <- unlist(filter(menuSettings, visualization =='aspatial'& attribute_name =='Households') %>%select(category_value))
 names(aHH) = unlist(filter(menuSettings, visualization =='aspatial'& attribute_name =='Households')%>%select(category_name))
@@ -53,3 +51,19 @@ names(sAccessibility) <- unlist(filter(menuSettings, visualization =='spatial' &
 hhEvents <- c('MigrationEvent', 'MoveEvent')
 perEvents <- c('BirthEvent', 'DeathEvent','DivorceEvent','EducationEvent','EmploymentEvent','LeaveParentsEvent','LicenseEvent','MarriageEvent')
 dwellEvents<- c('ConstructionEvent','DemolitionEvent','RenovationEvent')
+
+################################## File Variables ##################################
+
+fileList = c('aveHhSize.csv','carOwnership.csv',
+             'commutingDistance.csv','dwellingQualityLevel.csv',
+             'dwellings.csv','eventCounts.csv',
+             'hhAveIncome.csv','hhRentAndIncome.csv',
+             'hhSize.csv','hhType.csv','jobsBySectorAndRegion.csv',
+             'labourParticipationRate.csv','landRegions.csv',
+             'persByRace.csv','persMigrants.csv',
+             'popYear.csv','regionAvailableLand.csv',
+             'regionAvCommutingTime.csv','resultFileSpatial.csv'
+)
+fileNames = c('aveHhSize','c_owne','com_di','dwelQu','dwelli','eventc','hhAvIn','hhReIn','hhSize','hhType','regJoS',
+              'laPaRa','lanReg','perRac','perMig','popYea','regAvL','regCoT','spatialData')
+dataVec <-list()
