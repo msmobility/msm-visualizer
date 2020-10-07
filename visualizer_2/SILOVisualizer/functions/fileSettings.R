@@ -6,7 +6,7 @@
 ## Read graphic options
 
 menuSettings <- read_excel(paste(here(),"visualizer_2/SILOVisualizer/visualizerMenuOptions.xlsx",sep="/"), sheet = "menu")
-configuration <- read_excel(paste(here(),"visualizer_2/SILOVisualizer/visualizerMenuOptions.xlsx",sep="/"), sheet ="config")
+#configuration <- read_excel(paste(here(),"visualizer_2/SILOVisualizer/visualizerMenuOptions.xlsx",sep="/"), sheet ="config")
 ## Read labels
 
 myLabels <- read_excel(paste(here(),"visualizer_2/SILOVisualizer/visualizerLabels.xlsx", sep="/"), sheet= "Sheet1" ) 
@@ -19,6 +19,8 @@ finalYear <- as.numeric(parameters[8])
 zones <- st_read(paste(here(),parameters[9],sep="/"))
 
 ################################## Aspatial Categories ##################################
+aspatialMenu <- unlist(filter(menuSettings, visualization == 'aspatial' & attribute_name == 'Menu')%>%select(category_value))
+names(aspatialMenu) <- unlist(filter(menuSettings, visualization == 'aspatial' & attribute_name == 'Menu')%>%select(category_name))
 
 aHH <- unlist(filter(menuSettings, visualization =='aspatial'& attribute_name =='Households') %>%select(category_value))
 names(aHH) = unlist(filter(menuSettings, visualization =='aspatial'& attribute_name =='Households')%>%select(category_name))
@@ -67,3 +69,5 @@ fileList = c('aveHhSize.csv','carOwnership.csv',
 fileNames = c('aveHhSize','c_owne','com_di','dwelQu','dwelli','eventc','hhAvIn','hhReIn','hhSize','hhType','regJoS',
               'laPaRa','lanReg','perRac','perMig','popYea','regAvL','regCoT','spatialData')
 dataVec <-list()
+
+enableRegionalPlots <- TRUE
