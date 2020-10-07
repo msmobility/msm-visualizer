@@ -43,6 +43,8 @@ shinyServer(function(input, output, session) {
         if (global$datapath == getwd()){}
         else {
             ## File reader, loop fileList vector and store variables in session$userData$scenario_filename
+            ## Define session menu Settings Database
+            session$userData$menuSettings <- menuSettings
             j= 1
             for(i in fileList){
                 filePath = paste(global$datapath,i,sep="/", collapse = NULL)
@@ -56,6 +58,9 @@ shinyServer(function(input, output, session) {
                 }else{
                     print(paste("Warning , ",filePath, " does not exists in this scenario, dependent plots will be hidden"))
                     ## Here, pending to chose a modify options from vectors :
+                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_1 != filelist[j] | is.na(required_file_1))
+                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_2 != filelist[j] | is.na(required_file_2))
+                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_3 != filelist[j]| is.na(required_file_3))
                 }
                 j=j+1
             }
@@ -65,16 +70,6 @@ shinyServer(function(input, output, session) {
         pathElements <-str_split(global$datapath, '/', simplify = TRUE)
         global$implementation_value <-pathElements[length(pathElements)-1]
     })
-    ## Update elements from implementation
-    observeEvent(input$update, {updateData()})
-    updateData <-reactive({
-        initialYear <- as.numeric(min(session$userData$o_popYea$year))
-        #initialYear <- as.numeric(parameters[7])
-        finalYear <- as.numeric(max(session$userData$o_popYea$year))
-        #finalYear <- as.numeric(parameters[8])
-        updateSliderInput(session, "year", min = initialYear, max = finalYear)
-        global$zones <- st_read(paste(here(),"shapefiles",global$implementation_value,"zone_system.shp",sep="/"))
-    })
     ## Scenario File loader
     observeEvent(input$update, {loadfiles2()})
     
@@ -82,6 +77,7 @@ shinyServer(function(input, output, session) {
         if (global$datapath2 == getwd()){}
         else {
             ## File reader, loop fileList vector and store variables in session$userData$scenario_filename
+            
             j= 1
             for(l in fileList){
                 filePath2 = paste(global$datapath2,l,sep="/", collapse = NULL)
@@ -95,13 +91,61 @@ shinyServer(function(input, output, session) {
                 }else{
                     print(paste("Warning, ",filePath2, " does not exists in this scenario, dependent plots will be hidden"))
                     ## Here, pending to chose a modify options from vectors :
+                    
+                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_1 != filelist[j] | is.na(required_file_1))
+                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_2 != filelist[j] | is.na(required_file_2))
+                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_3 != filelist[j]| is.na(required_file_3))
                 }
                 j=j+1
             }
             session$userData$c_spatialData <-rename(session$userData$c_spatialData, "shp_id" = "zone")
         }
     })
-    
+    ## Regional plots checking
+    output$showRegionalPlots <-reactive({
+        regionalPlots <-session$userData$enableRegionalPlots
+        return(regionalPlots)
+    })
+    outputOptions(output, "showRegionalPlots", suspendWhenHidden = FALSE)
+    ## Update elements from implementation
+    observeEvent(input$update, {updateData()})
+    updateData <-reactive({
+        initialYear <- as.numeric(min(session$userData$o_popYea$year))
+        finalYear <- as.numeric(max(session$userData$o_popYea$year))
+        updateSliderInput(session, "year", min = initialYear, max = finalYear)
+        
+        ## Update menu options
+        
+        session$userData$aspatialMenu <- unlist(filter(session$userData$menuSettings, visualization == 'aspatial' & attribute_name == 'Menu')%>%select(category_value))
+        names(session$userData$aspatialMenu) <- unlist(filter(session$userData$menuSettings, visualization == 'aspatial' & attribute_name == 'Menu')%>%select(category_name))
+        
+        session$userData$aHH <- unlist(filter(session$userData$menuSettings, visualization =='aspatial'& attribute_name =='Households') %>%select(category_value))
+        names(session$userData$aHH) = unlist(filter(session$userData$menuSettings, visualization =='aspatial'& attribute_name =='Households')%>%select(category_name))
+        
+        session$userData$aPerson <- unlist(filter(session$userData$menuSettings, visualization == 'aspatial' & attribute_name == 'Persons')%>%select(category_value))
+        names(session$userData$aPerson) <-unlist(filter(session$userData$menuSettings, visualization == 'aspatial' & attribute_name == 'Persons')%>%select(category_name))
+        
+        session$userData$aDwelling <- unlist(filter(session$userData$menuSettings, visualization == 'aspatial' & attribute_name == 'Dwellings')%>%select(category_value))
+        names(session$userData$aDwelling) <-unlist(filter(session$userData$menuSettings, visualization == 'aspatial' & attribute_name == 'Dwellings')%>%select(category_name))
+        
+        session$userData$aRegional <- unlist(filter(session$userData$menuSettings, visualization == 'aspatial' & attribute_name == 'Regional')%>%select(category_value))
+        names(session$userData$aRegional) <-unlist(filter(session$userData$menuSettings, visualization == 'aspatial' & attribute_name == 'Regional')%>%select(category_name))
+        
+        session$userData$aEvent <- unlist(filter(session$userData$menuSettings, visualization == 'aspatial' & attribute_name == 'Events')%>%select(category_value))
+        names(session$userData$aEvent) <-unlist(filter(session$userData$menuSettings, visualization == 'aspatial' & attribute_name == 'Events')%>%select(category_name))
+        
+        ## Update function
+        print("Updating menu")
+        updateSelectInput(session, 'aspatialLevel',"Select aspatial attribute",(session$userData$aspatialMenu))
+        updateSelectInput(session, 'HHLevel',"Select aspatial attribute", (session$userData$aHH))
+        updateSelectInput(session, 'personsLevel',"Select aspatial attribute", (session$userData$aPerson))
+        updateSelectInput(session, 'dwellingsLevel',"Select aspatial attribute", (session$userData$aDwelling))
+        updateSelectInput(session, 'regionalLevel',"Select aspatial attribute", (session$userData$aRegional))
+        updateSelectInput(session, 'eventsLevel',"Select aspatial attribute", (session$userData$aEvent))
+        
+        ## Update zones shapefile    
+        global$zones <- st_read(paste(here(),"shapefiles",global$implementation_value,"zone_system.shp",sep="/"))
+    })
     ## Dummy function to trigger maps
     dummyfunc <-eventReactive(input$update, {dummycall(1)})
     
@@ -157,7 +201,6 @@ shinyServer(function(input, output, session) {
             
             isComparison <-TRUE
             legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute, isComparison)
-            #originalDataSet <-prepareSiloMap(empty_vec$spatialData, input$year, input$zone_level, attribute, aggregationType, global$zones)
             originalDataSet <-prepareSiloMap(session$userData$o_spatialData, input$year, input$zone_level, attribute, aggregationType, global$zones)
             scenarioDataSet <-prepareSiloMap(session$userData$c_spatialData, input$year, input$zone_level, attribute, aggregationType, global$zones)
             
@@ -189,12 +232,6 @@ shinyServer(function(input, output, session) {
         return(list(groupedTable, legend, attribute))
         
     }) 
-    ################################# Test  #################################
-    ## Experimental map reactivity
-    #geo <- observeEvent(input$siloMap_shape_click, {
-    #    p <- input$siloMap_shape_click
-    #})
-    #################################
     output$gisTable <- renderDataTable(
         select(as.data.frame(spatialData()[1]),-geometry)
     )
@@ -202,7 +239,7 @@ shinyServer(function(input, output, session) {
         getAspatialData()
     )
     ##  select(as.data.frame(global$exportTable),-geometry)
-    ## Downloader
+    ################################# Table download #################################
     output$downloadData <- downloadHandler(
         filename <- function() {
             paste("export_example", ".csv", sep = "")
@@ -277,17 +314,21 @@ shinyServer(function(input, output, session) {
                 }
             }else if(input$HHLevel == 'hhAvSize'){
                 if(input$comparison == FALSE){
-                    dataTable <- session$userData$o_aveHhsize
+                    dataTable <- session$userData$o_aveHhSize
                 }else {
-                    dataTable <- siloAspatialTableComparator(session$userData$o_aveHhsize, session$userData$c_aveHhsize)
+                    dataTable <- siloAspatialTableComparator(session$userData$o_aveHhSize, session$userData$c_aveHhSize)
                 }
             }else if(input$HHLevel =='hhInc'){
                 if(input$comparison == FALSE){
-                    dataTable <- session$userData$o_hhAvIn  
+                    dataTable <- session$userData$o_hhAvIn
+                    dataTable <-dataTable%>%rename(Year = year, Key = variable, Value = value)
+                    print("HH average income table")
+                    print(dataTable)
                 }else{
                     session$userData$o_hhAvIn[['variable']] <-as.character(session$userData$o_hhAvIn[['variable']])
                     session$userData$c_hhAvIn[['variable']] <-as.character(session$userData$c_hhAvIn[['variable']])
                     dataTable <- siloAspatialTableComparator(session$userData$o_hhAvIn, session$userData$c_hhAvIn)
+                    dataTable <-dataTable%>%rename(Year = year, Key = variable, Value = value)
                 }
             }else if(input$HHLevel == 'hhCarOwnLev'){
                 if(input$comparison == FALSE){
@@ -299,6 +340,7 @@ shinyServer(function(input, output, session) {
                     session$userData$o_c_owne[['carOwnershipLevel']]<-as.character(session$userData$o_c_owne[['carOwnershipLevel']])
                     session$userData$c_c_owne[['carOwnershipLevel']]<-as.character(session$userData$c_c_owne[['carOwnershipLevel']])
                     dataTable <- siloAspatialTableComparator(session$userData$o_c_owne, session$userData$c_c_owne)
+                    dataTable <-dataTable%>%rename(Year = year, Key = carOwnershipLevel, Value = households)
                 }
             }else if(input$HHLevel == 'hhRentIncome'){
                 if(input$comparison == FALSE){

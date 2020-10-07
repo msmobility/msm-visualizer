@@ -38,9 +38,9 @@ source(paste(getwd(),"visualizer_2/SILOVisualizer/functions/fileReader_v02.r", s
 msmQualitative <- brewer.pal(12, "Set3")[c(1, 3:12)] #colors used for qualitative attributes
 msmSequential <- viridisLite::viridis(10, direction = -1) #colors used for sequential attributes
 msmPastel <- brewer.pal(9, "Pastel1") #colors used for pie chart
+showRegionalPlots <-TRUE
 
-##########################
-### Dashboard Header
+########################## Header ##########################
 
 ui = dashboardPagePlus( 
     dashboardHeaderPlus(
@@ -50,8 +50,8 @@ ui = dashboardPagePlus(
         enable_rightsidebar = TRUE,
         rightSidebarIcon = "table"
         ),
-##########################
-    ### Sidebar
+########################## Sidebar ##########################
+
     dashboardSidebar( width = 300,
      sidebarMenu(
          menuItem(
@@ -98,7 +98,7 @@ ui = dashboardPagePlus(
                         selectInput("sIncome", h5("Select income class"), (sIncome))),
                     conditionalPanel("input.spatialLevel == 'accessibilities'",
                         selectInput("sAcc", h5("Select accessibility mode"), (sAccessibility))),
-                    checkboxInput("enable_regions","Enable region plots", value = FALSE),
+                        checkboxInput("enable_regions","Enable click on region plots", value = FALSE),
                     ## View growth
                     conditionalPanel("input.comparison == true",
                         radioButtons("comparisonSelector", h4("Select type of comparison"),
@@ -113,12 +113,7 @@ ui = dashboardPagePlus(
                     )
                 ),
                 conditionalPanel("input.renderType == 'aspatial'",
-                    selectInput("aspatialLevel","Select aspatial attribute", c("Overview" = 'overview',
-                        "Households" = 'households',
-                        "Persons" = 'persons',
-                        "Dwellings" = 'dwellings',
-                        "Regional" = 'regional',
-                        "Events" = 'events')),
+                    selectInput("aspatialLevel","Select aspatial attribute",(aspatialMenu)),
                     conditionalPanel("input.aspatialLevel == 'households'",
                         selectInput("HHLevel", "Select household level", (aHH)),
                         conditionalPanel("input.HHLevel == 'hhSizInc' |input.HHLevel == 'hhRentIncome'",
@@ -137,25 +132,36 @@ ui = dashboardPagePlus(
             )
         )
     ),
-##########################
-    ## Dashboard body
+########################## Body ##########################
     dashboardBody(
         fluidRow(
-            conditionalPanel(condition = "input.renderType == 'spatial'",
-                leafletOutput("siloMap", height = 900),
-                    conditionalPanel(condition = "input.enable_regions == 1",
-                        fluidRow(column(12, h4(" Regional plots ")),
+            boxPlus(
+                closable = FALSE,
+                status = "primary",
+                width = 12,
+                solidHeader = TRUE,
+                conditionalPanel(condition = "input.renderType == 'spatial'",
+                    leafletOutput("siloMap", height = 850)
+                ),
+                conditionalPanel(condition = "input.renderType == 'aspatial'",
+                    plotlyOutput("siloPlot", height = 850))
+                )
+            ),
+        conditionalPanel(condition = "input.enable_regions == 1",
+            boxPlus(
+                title = ("SILO Regional plots"),
+                closable = FALSE,
+                status = "primary",
+                solidHeader = TRUE,
+                width = NULL,
+                    fluidRow(column(12,
                         fluidRow(
                             column (4, plotlyOutput("regCommPlot")),
                             column (4, plotlyOutput("avLandPlot")),
                             column (4, plotlyOutput("jobsBySectorPlot")))))
-        )),
-        fluidRow(
-        conditionalPanel(condition = "input.renderType == 'aspatial'",
-            plotlyOutput("siloPlot", height = 950)))
+            ))
     ),
-##########################
-    ## Right sidebar
+########################## Right sidebar ##########################
     rightsidebar = rightSidebar(
         background = "light",
         width = 450,
