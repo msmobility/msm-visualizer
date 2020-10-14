@@ -110,6 +110,8 @@ shinyServer(function(input, output, session) {
     ## Update elements from implementation
     observeEvent(input$update, {updateData()})
     updateData <-reactive({
+        print("Updating menu")
+        updateVar <-input$update
         initialYear <- as.numeric(min(session$userData$o_popYea$year))
         finalYear <- as.numeric(max(session$userData$o_popYea$year))
         updateSliderInput(session, "year", min = initialYear, max = finalYear)
@@ -135,7 +137,7 @@ shinyServer(function(input, output, session) {
         names(session$userData$aEvent) <-unlist(filter(session$userData$menuSettings, visualization == 'aspatial' & attribute_name == 'Events')%>%select(category_name))
         
         ## Update function
-        print("Updating menu")
+        
         updateSelectInput(session, 'aspatialLevel',"Select aspatial attribute",(session$userData$aspatialMenu))
         updateSelectInput(session, 'HHLevel',"Select aspatial attribute", (session$userData$aHH))
         updateSelectInput(session, 'personsLevel',"Select aspatial attribute", (session$userData$aPerson))
@@ -382,7 +384,7 @@ shinyServer(function(input, output, session) {
                 }
             }else if (input$personsLevel == 'peLaborPartRate'){
                 if(input$comparison == FALSE){
-                    dataTable <-siloAspatialPopParticippation(session$userData$o_laPaRa)
+                    dataTable <-siloAspatialPopParticipation(session$userData$o_laPaRa)
                 }else{
                     o_popPart <-siloAspatialPopParticipation(session$userData$o_laPaRa)
                     c_popPart <-siloAspatialPopParticipation(session$userData$c_laPaRa)
