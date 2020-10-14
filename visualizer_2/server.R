@@ -275,8 +275,8 @@ shinyServer(function(input, output, session) {
             write.csv(getAspatialData(),file, row.names = TRUE)
         }
     )
-    #################################
-    ## Aspatial logic procedure, calculate dataTable output used in plots based on the input parameters
+    ################################# Aspatial Logic #################################
+    ## Calculate dataTable output used in plots based on the input parameters
     getAspatialData <- reactive({
         n <-dummyfunc()
         
@@ -482,8 +482,8 @@ shinyServer(function(input, output, session) {
         }
         return(dataTable)
     })
-    ###################################
-    ### Regional subplots ###
+    ################################# Regional click on map plots #################################
+    
     regionalTrigger <-eventReactive(input$siloMap_shape_click, {dummycall2(1)})
     ClickOnMapCommTime <- reactive({
         n <- regionalTrigger()
@@ -513,7 +513,8 @@ shinyServer(function(input, output, session) {
         return (database)
     })
     
-######################################################################################################################### 
+#########################################################################################################################
+    ################################# Regional click on map plots #################################
 ##Figure Logic
     fig <- reactive({
         msmSequential <- viridisLite::viridis(10, direction = -1)
@@ -569,6 +570,14 @@ shinyServer(function(input, output, session) {
         }else if(input$aspatialLevel == 'events'){
             fig <-msmSimpleLines(getAspatialData, msmSequential)
         }
+        fig <-fig %>% layout(
+            title ="Test title",
+            scene = list(
+                xaxis =list(title ="Year"),
+                yaxis =list(title ="Advance")
+            ),
+            legend = list(title = list(text = "<b>Legend</b>"))
+        )
         return(fig)
     })
     ### Click on map figures
