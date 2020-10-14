@@ -6,7 +6,7 @@
 ## Read graphic options
 
 menuSettings <- read_excel(paste(here(),"visualizer_2/SILOVisualizer/visualizerMenuOptions.xlsx",sep="/"), sheet = "menu")
-#configuration <- read_excel(paste(here(),"visualizer_2/SILOVisualizer/visualizerMenuOptions.xlsx",sep="/"), sheet ="config")
+configuration <- read_excel(paste(here(),"visualizer_2/SILOVisualizer/visualizerMenuOptions.xlsx",sep="/"), sheet ="config")
 ## Read labels
 
 myLabels <- read_excel(paste(here(),"visualizer_2/SILOVisualizer/visualizerLabels.xlsx", sep="/"), sheet= "Sheet1" ) 
@@ -16,7 +16,7 @@ parameters <- unlist(filter(configuration, implementation == 'muc'))
 initialYear <- as.numeric(parameters[7])
 finalYear <- as.numeric(parameters[8])
 
-zones <- st_read(paste(here(),parameters[9],sep="/"))
+#zones <- st_read(paste(here(),parameters[9],sep="/"))
 
 ################################## Aspatial Categories ##################################
 aspatialMenu <- unlist(filter(menuSettings, visualization == 'aspatial' & attribute_name == 'Menu')%>%select(category_value))
