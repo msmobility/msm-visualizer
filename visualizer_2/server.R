@@ -54,13 +54,13 @@ shinyServer(function(input, output, session) {
                     varName <-fileNames[j]
                     varName <-paste('o',varName, sep='_')
                     # Store databases in session$userData, each database starts with o_ + values found in fileNames
-                    session$userData[[varName]] <- read.csv(paste(global$datapath,filelist[j],sep="/", collapse = NULL))
+                    session$userData[[varName]] <- read.csv(paste(global$datapath,fileList[j],sep="/", collapse = NULL))
                 }else{
                     print(paste("Warning , ",filePath, " does not exists in this scenario, dependent plots will be hidden"))
                     ## Here, pending to chose a modify options from vectors :
-                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_1 != filelist[j] | is.na(required_file_1))
-                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_2 != filelist[j] | is.na(required_file_2))
-                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_3 != filelist[j]| is.na(required_file_3))
+                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_1 != fileList[j] | is.na(required_file_1))
+                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_2 != fileList[j] | is.na(required_file_2))
+                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_3 != fileList[j]| is.na(required_file_3))
                 }
                 j=j+1
             }
@@ -87,14 +87,14 @@ shinyServer(function(input, output, session) {
                     varName <-fileNames[j]
                     varName <-paste('c',varName, sep='_')
                     # Store databases in session$userData, each database starts with o_ + values found in fileNames
-                    session$userData[[varName]] <- read.csv(paste(global$datapath2,filelist[j],sep="/", collapse = NULL))
+                    session$userData[[varName]] <- read.csv(paste(global$datapath2,fileList[j],sep="/", collapse = NULL))
                 }else{
                     print(paste("Warning, ",filePath2, " does not exists in this scenario, dependent plots will be hidden"))
                     ## Here, pending to chose a modify options from vectors :
                     
-                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_1 != filelist[j] | is.na(required_file_1))
-                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_2 != filelist[j] | is.na(required_file_2))
-                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_3 != filelist[j]| is.na(required_file_3))
+                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_1 != fileList[j] | is.na(required_file_1))
+                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_2 != fileList[j] | is.na(required_file_2))
+                    session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_3 != fileList[j]| is.na(required_file_3))
                 }
                 j=j+1
             }
