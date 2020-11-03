@@ -203,8 +203,8 @@ shinyServer(function(input, output, session) {
             
             isComparison <-TRUE
             legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute, isComparison)
-            originalDataSet <-prepareSiloMap(session$userData$o_spatialData, input$year, input$zone_level, attribute, aggregationType, global$zones)
-            scenarioDataSet <-prepareSiloMap(session$userData$c_spatialData, input$year, input$zone_level, attribute, aggregationType, global$zones)
+            originalDataSet <-prepareSiloMap(session$userData$o_spatialData, input$year, input$zoneAgg, attribute, aggregationType, global$zones)
+            scenarioDataSet <-prepareSiloMap(session$userData$c_spatialData, input$year, input$zoneAgg, attribute, aggregationType, global$zones)
             
             groupedTable <- compareScenarios(originalDataSet, scenarioDataSet,attribute)  
             
@@ -213,8 +213,8 @@ shinyServer(function(input, output, session) {
             isComparison <-TRUE
             
             legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute, isComparison)
-            originalDataSet <-prepareSiloMap(session$userData$o_spatialData, initialYear, input$zone_level, attribute, aggregationType, global$zones)
-            scenarioDataSet <-prepareSiloMap(session$userData$o_spatialData, input$year, input$zone_level, attribute, aggregationType, global$zones)
+            originalDataSet <-prepareSiloMap(session$userData$o_spatialData, initialYear, input$zoneAgg, attribute, aggregationType, global$zones)
+            scenarioDataSet <-prepareSiloMap(session$userData$o_spatialData, input$year, input$zoneAgg, attribute, aggregationType, global$zones)
             groupedTable <- compareScenarios(originalDataSet, scenarioDataSet,attribute)
             
         } else {
@@ -226,7 +226,7 @@ shinyServer(function(input, output, session) {
             
             isComparison <-FALSE
             legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute, isComparison)
-            groupedTable <-prepareSiloMap(spatialDataSet, input$year, input$zone_level, attribute, aggregationType, global$zones)
+            groupedTable <-prepareSiloMap(spatialDataSet, input$year, input$zoneAgg, attribute, aggregationType, global$zones)
             
         }
 
@@ -585,15 +585,22 @@ shinyServer(function(input, output, session) {
     ### Click on map figures
     figReg1 <- reactive({
         msmSequential <- viridisLite::viridis(10, direction = -1)
-        msmSimpleLines(ClickOnMapCommTime, msmSequential)
+        
+        figReg1 <-msmSimpleLines(ClickOnMapCommTime, msmSequential)
+        figReg1 <-generateRegionalClickLabels(figReg1, "Average commuting time","Year", "Commuting time (m)", "Legend", input)
+        return(figReg1)
     })
     figReg2 <- reactive({
         msmSequential <- viridisLite::viridis(10, direction = -1)
-        msmSimpleLines(ClickOnMapAvLand, msmSequential)
+        figReg2 <- msmSimpleLines(ClickOnMapAvLand, msmSequential)
+        figReg2 <-generateRegionalClickLabels(figReg2, "Available land","Year", "Available area", "Legend", input)
+        return(figReg2)
     })
     figReg3 <- reactive({
         msmSequential <- viridisLite::viridis(10, direction = -1)
-        msmAnimatedLines(ClickOnMapJobs, msmSequential, FALSE)
+        figReg3 <-msmAnimatedLines(ClickOnMapJobs, msmSequential, FALSE)
+        figReg3 <-generateRegionalClickLabels(figReg3, "Jobs by sector","Year", "Amount of jobs", "Legend", input)
+        return(figReg3)
     })
     
     ################################# Output renders for aspatial plots #################################
