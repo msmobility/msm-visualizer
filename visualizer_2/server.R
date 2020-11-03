@@ -139,11 +139,11 @@ shinyServer(function(input, output, session) {
         ## Update function
         
         updateSelectInput(session, 'aspatialLevel',"Select aspatial attribute",(session$userData$aspatialMenu))
-        updateSelectInput(session, 'HHLevel',"Select aspatial attribute", (session$userData$aHH))
-        updateSelectInput(session, 'personsLevel',"Select aspatial attribute", (session$userData$aPerson))
-        updateSelectInput(session, 'dwellingsLevel',"Select aspatial attribute", (session$userData$aDwelling))
-        updateSelectInput(session, 'regionalLevel',"Select aspatial attribute", (session$userData$aRegional))
-        updateSelectInput(session, 'eventsLevel',"Select aspatial attribute", (session$userData$aEvent))
+        updateSelectInput(session, 'HHLevel',"Select household level", (session$userData$aHH))
+        updateSelectInput(session, 'personsLevel',"Select person level", (session$userData$aPerson))
+        updateSelectInput(session, 'dwellingsLevel',"Select dwelling level", (session$userData$aDwelling))
+        updateSelectInput(session, 'regionalLevel',"Select regional level", (session$userData$aRegional))
+        updateSelectInput(session, 'eventsLevel',"Select event attribute", (session$userData$aEvent))
         
         ## Update zones shapefile    
         global$zones <- st_read(paste(here(),"shapefiles",global$implementation_value,"zone_system.shp",sep="/"))
@@ -513,16 +513,13 @@ shinyServer(function(input, output, session) {
         return (database)
     })
     
-#########################################################################################################################
-    ################################# Regional click on map plots #################################
-##Figure Logic
+    ################################# Aspatial figure logic #################################
+    ##Figure Logic
     fig <- reactive({
         msmSequential <- viridisLite::viridis(10, direction = -1)
         if(input$aspatialLevel == 'overview'){
             ## Parametrize
             fig <-msmSimpleLines(getAspatialData, msmSequential)
-            
-            fig<- fig%>%layout(title= "Overview")
         }else if (input$aspatialLevel == 'households'){
             if(input$HHLevel == 'hhSizInc'){
                 fig <- msmAnimatedLines(getAspatialData,msmSequential,input$switchView)
@@ -570,14 +567,19 @@ shinyServer(function(input, output, session) {
         }else if(input$aspatialLevel == 'events'){
             fig <-msmSimpleLines(getAspatialData, msmSequential)
         }
-        fig <-fig %>% layout(
-            title ="Test title",
-            scene = list(
-                xaxis =list(title ="Year"),
-                yaxis =list(title ="Advance")
-            ),
-            legend = list(title = list(text = "<b>Legend</b>"))
-        )
+        ### Here, the labels will be implemented
+        fig <- generateLabels(fig, "siloAspatial", input)
+        ### Send to function
+        #fig <-fig %>% layout(
+        #    title ="Test title",
+        #    scene = list(
+        #        xaxis =list(title ="Year"),
+        #        yaxis =list(title ="Advance")
+        #    ),
+        #    legend = list(title = list(text = "<b>Legend</b>"))
+        #)
+        ### END
+        
         return(fig)
     })
     ### Click on map figures
@@ -594,6 +596,7 @@ shinyServer(function(input, output, session) {
         msmAnimatedLines(ClickOnMapJobs, msmSequential, FALSE)
     })
     
+    ################################# Output renders for aspatial plots #################################
     output$siloPlot <-renderPlotly(
         fig()
     )
