@@ -3,9 +3,9 @@
 ## Spatial function for routing options
 
 ## Function prepareSiloMap : Call the geographical database and filter according to the parameters in UI
-prepareSiloMap <- function (data, thisYear, zone_level, attribute, aggregationType, geoZones){
+prepareSiloMap <- function (data, thisYear, zoneAgg, attribute, aggregationType, geoZones){
   ## Conditional to choose between aggregate or keep dissaggregate
-  if(zone_level == FALSE){
+  if(zoneAgg == "aggregated"){
     joinTable <- filter(data ,year == thisYear)
     spatialTable <- left_join(geoZones, joinTable, by="shp_id")
     
