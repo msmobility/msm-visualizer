@@ -21,20 +21,34 @@ labelSiloAspatial <- function(plot, attribute, change, switch){
     layout(legend = list(y = 0.9, yanchor = "top"))
 }
 generateLabels <- function(fig, visualizationType, input) {
-  print("We are in the function")
-  print(menuSettings)
-  print("Hehehe")
-  print(input$aspatialLevel)
+  ## Legend background properties
+  l <- list(font = list(
+      family = "sans-serif",
+      size = 12,
+      color = "#000"),
+    bgcolor = "#E2E2E2",
+    bordercolor = "#FFFFFF",
+    borderwidth = 2)
+  
+  
+  
+
   ## Filter labels
   filteredLabels = filter(myLabels,myDataType == visualizationType)
+  containsFrame <-FALSE #Default value
+
   if(input$aspatialLevel == 'overview'){
     filteredLabels = filter(filteredLabels, myItem == input$aspatialLevel)
   }else if(input$aspatialLevel == 'households'){
     filteredLabels = filter(filteredLabels, myItem == input$HHLevel)
+    if((input$HHLevel == 'hhSizInc') || (input$HHLevel == 'hhRentIncome')){
+      containsFrame <- TRUE
+    }
   }else if(input$aspatialLevel == 'persons'){
-    print("PErsons levels, ")
-    print(input$personsLevel)
     filteredLabels = filter(filteredLabels, myItem == input$personsLevel)
+    if(input$personsLevel == 'peAgeGend'){
+      containsFrame <- TRUE
+    }
   }else if(input$aspatialLevel == 'dwellings'){
     filteredLabels = filter(filteredLabels, myItem == input$dwellingsLevel)
   }else if(input$aspatialLevel == 'regional'){
@@ -42,32 +56,52 @@ generateLabels <- function(fig, visualizationType, input) {
   }else if(input$aspatialLevel == 'events'){
     filteredLabels = filter(filteredLabels, myItem == input$eventsLevel)
   }
-  if(input$switchView == FALSE){
+  if((input$switchView == FALSE) && (input$pyramid == FALSE)){
     switch <-1
     filteredLabels = filter(filteredLabels, mySwitch == switch)
+    
+
   }else{
     switch <-2
     filteredLabels = filter(filteredLabels, mySwitch == switch)
+    
   }
+  myLegend <-filteredLabels$myLegend
+  myLegend <- paste( "<b>", myLegend,"</b>", sep=" ")
+  if(input$comparison == TRUE){
+    myYLabel <- paste("% of change in",filteredLabels$myY, sep = " ")
+  }else{
+    myYLabel <- filteredLabels$myY
+  }
+  
+
   
   fig <-fig %>%layout(
     title =filteredLabels$myTitle,
     xaxis =list(title = filteredLabels$myX),
-    yaxis =list(title = filteredLabels$myY),
-    annotations = list(yref = 'paper',xref = 'paper', y = 0.95, x = 1.05, text = filteredLabels$myLegend)
-    #legend =list(title = "filteredLabels$myLegend")#,
-    #sliders =list(title = filteredLabels$myFrame)
+    yaxis =list(title = myYLabel),
+    legend=list(title=list(text=myLegend),
+                x = 15,
+                y = 0.5,
+                bgcolor = "#E2E2E2",
+                bordercolor = "#FFFFFF",
+                borderwidth = 2)
+    
   )
-  ## Second filter level
-  #if(inp)
+  ## Add frame labels
+  print(input$aspatialLevel)
+  print(input$HHLevel)
+  print(input$HHLevel)
+  print(input$personsLevel)
   
-  
-  #print(input)
-  #print(input$aspatialLevel)
+  if(containsFrame == TRUE){
+    print(filteredLabels)
+    print("Entered ")
+    
+    fig<-fig%>%animation_slider(currentvalue = list(prefix = paste(filteredLabels$myFrame,":",sep=" "))) 
+                                  
+  }
 
-  print("Filtered options")
-  print(filteredLabels)
-  ##session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_1 != fileList[j] | is.na(required_file_1))
-  
+
   return(fig)
 }
