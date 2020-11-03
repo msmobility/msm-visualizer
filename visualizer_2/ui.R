@@ -76,11 +76,13 @@ ui = dashboardPagePlus(
              tabName = "parameters",
              icon = icon("list"),
              conditionalPanel("input.renderType == 'spatial'",
-                ## Time horizon (update with model parameters)
+                ## Time horizon 
                 sliderInput(inputId = "year",label = h4("Select Year"),
                     value = 2020, min = initialYear, max = finalYear),
                 ## Year selection
-                checkboxInput("zone_level", "View at zone level", value=FALSE),
+                radioButtons("zoneAgg", "Select zone aggregation", 
+                    choices = c("Dissagregated" = "dissagregated","Aggregated" = "aggregated") , selected = "aggregated"),
+                #checkboxInput("zone_level", "View at zone level", value=FALSE),
                 ## Spatial conditional panel
                 conditionalPanel("input.renderType == 'spatial'",
                     selectInput("spatialLevel", h4("Select spatial attribute"),c("Population" = 'population',
@@ -98,7 +100,8 @@ ui = dashboardPagePlus(
                         selectInput("sIncome", h5("Select income class"), (sIncome))),
                     conditionalPanel("input.spatialLevel == 'accessibilities'",
                         selectInput("sAcc", h5("Select accessibility mode"), (sAccessibility))),
-                        checkboxInput("enable_regions","Enable click on region plots", value = FALSE),
+                    conditionalPanel("input.zoneAgg == 'aggregated'",
+                        checkboxInput("enable_regions","Enable click on region plots", value = FALSE)),
                     ## View growth
                     conditionalPanel("input.comparison == true",
                         radioButtons("comparisonSelector", h4("Select type of comparison"),
@@ -147,7 +150,7 @@ ui = dashboardPagePlus(
                     plotlyOutput("siloPlot", height = 850))
                 )
             ),
-        conditionalPanel(condition = "input.enable_regions == 1",
+        conditionalPanel(condition = "input.enable_regions == 1 && input.zoneAgg == 'aggregated'",
             boxPlus(
                 title = ("SILO Regional plots"),
                 closable = FALSE,
