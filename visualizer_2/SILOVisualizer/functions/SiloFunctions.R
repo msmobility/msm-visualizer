@@ -20,6 +20,7 @@ labelSiloAspatial <- function(plot, attribute, change, switch){
                             xanchor = "left", yanchor = "bottom", legendtitle = TRUE, showarrow = F)) %>%
     layout(legend = list(y = 0.9, yanchor = "top"))
 }
+
 generateLabels <- function(fig, visualizationType, input) {
   ## Legend background properties
   l <- list(font = list(
@@ -89,11 +90,6 @@ generateLabels <- function(fig, visualizationType, input) {
     
   )
   ## Add frame labels
-  print(input$aspatialLevel)
-  print(input$HHLevel)
-  print(input$HHLevel)
-  print(input$personsLevel)
-  
   if(containsFrame == TRUE){
     print(filteredLabels)
     print("Entered ")
@@ -101,7 +97,23 @@ generateLabels <- function(fig, visualizationType, input) {
     fig<-fig%>%animation_slider(currentvalue = list(prefix = paste(filteredLabels$myFrame,":",sep=" "))) 
                                   
   }
-
-
+  return(fig)
+}
+generateRegionalClickLabels <-function(fig, title, axX, axY, legend,input){
+  legend <-paste("<b>",legend,"</b>",sep = "")
+  if(input$comparison == TRUE){
+    axY <- paste("% of change in",axY, sep = " ")
+  }
+  fig <-fig%>%layout(
+    title = title,
+    xaxis = list(title = axX),
+    yaxis = list(title = axY),
+    legend = list(title = list(text= legend),
+      y = 0.5,
+      bgcolor = "#E2E2E2",
+      bordercolor = "#FFFFFF",
+      borderwidth = 2)
+  )
+  
   return(fig)
 }
