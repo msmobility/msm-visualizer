@@ -145,8 +145,9 @@ shinyServer(function(input, output, session) {
         updateSelectInput(session, 'regionalLevel',"Select regional level", (session$userData$aRegional))
         updateSelectInput(session, 'eventsLevel',"Select event attribute", (session$userData$aEvent))
         
-        ## Update zones shapefile    
-        global$zones <- st_read(paste(here(),"shapefiles",global$implementation_value,"zone_system.shp",sep="/"))
+        ## Update zones shapefile
+        #global$zones <- st_read(paste(here(),"shapefiles",global$implementation_value,"zone_system.shp",sep="/"))
+        global$zones <- st_read(paste(here(),"use_cases",global$implementation_value,"zone_shapefile","zone_system.shp",sep="/"))
     })
     ## Dummy function to trigger maps
     dummyfunc <-eventReactive(input$update, {dummycall(1)})

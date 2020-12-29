@@ -28,10 +28,10 @@ setwd(here())
 ## Read external files for extra functions (to be checked)(fix in the latest version)
 
 source(paste(getwd(),"/visualizer_2/SILOVisualizer/functions/fileSettings.r", sep ="/"))  ## Load auxiliary files like labels
-source(paste(here(),"visualizer/figureTableFunctions.R", sep ='/')) #contains functions for creating plots, maps and tables
+source(paste(here(),"visualizer_2/SILOVisualizer/functions/figureTableFunctions.R", sep ='/')) #contains functions for creating plots, maps and tables
 source(paste(getwd(),"/visualizer_2/SILOVisualizer/functions/SiloLogic.r", sep ="/"))
 source(paste(getwd(),"/visualizer_2/SILOVisualizer/functions/SiloFunctions.r", sep ="/"))
-source(paste(getwd(),"visualizer_2/SILOVisualizer/functions/fileReader_v02.r", sep ="/"))
+source(paste(getwd(),"visualizer_2/SILOVisualizer/functions/fileReader.r", sep ="/"))
 
 
 # create colors
