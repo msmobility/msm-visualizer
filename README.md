@@ -1,6 +1,11 @@
 # MSM-visualizer V 2.0
 
 R and shiny based tool to visualize results produced by the integrated land-use/transport models SILO.
+
+## Technical requirements
+
+At least R 3.6.1 is required to install the packages and run the tool
+
 ## Main functions
 
 Visualize spatial and aspatial model variables and compare scenarios. The zone-related variables can be visualized using the "click on map" function. The scenarios can be changed in order to compare different scenarios.
