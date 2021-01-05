@@ -13,7 +13,7 @@ Visualize spatial and aspatial model variables and compare scenarios. The zone-r
 ## Run and open examples
 Open the msm-visualizer.R and then open the visualizer_2/ui.r. After that, click on "Run app"
 
-Once the application is open, look for the desired example in the use_cases folder and select one scenario folder. To compare scenarios, click the checkbox "Compare scenarios" and select the folder corresponding o the second scenario.
+Once the application is open, look for the desired example in the use_cases folder and select one scenario folder. To compare scenarios, click the checkbox "Compare scenarios" and select the folder corresponding to the second scenario.
 
 If you change the implementation, the map will automatically change.
 ## Available examples
