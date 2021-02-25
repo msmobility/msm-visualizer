@@ -59,6 +59,7 @@ library(tmap) #for producing maps
 library(leaflet) #for producing interactive maps
 library(viridis) #for picking colors
 library(RColorBrewer) #for picking colors
+library(flexdashboard) #for picking colors
 
 
 # source required files
