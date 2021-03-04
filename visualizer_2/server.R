@@ -154,20 +154,33 @@ shinyServer(function(input, output, session) {
     
     ## Plot Map
     output$siloMap <- renderLeaflet({
-        #print(input$update)
         n <-dummyfunc()
-        
-        ## Map color selection
-        if(input$comparisonSelector ==1){
-            farbe <- "-RdBu"
-        } else if (input$comparisonSelector ==2){
-            farbe <- "-RdBu"
-        } else {
-            if(input$scenarioSelector == 1){
+        ## Select color
+        ## Identify type of process (1 scenario / 2 scenarios)
+        if(input$comparison == TRUE){
+            if(input$comparisonSelectorDouble ==1){
+                farbe <- "-RdBu" 
+            } else if (input$comparisonSelectorDouble ==2){
+                farbe <- "-RdBu"
             } else {
+                if(input$scenarioSelector == 1){
+                } else {
+                }
+                farbe <- "YlOrBr"
+            }    
+        }else{
+            if(input$comparisonSelectorSingle ==2){
+                farbe <- "-RdBu" 
+            } else {
+                if(input$scenarioSelector == 1){
+                } else {
+                }
+                farbe <- "YlOrBr"
             }
-            farbe <- "YlOrBr"
         }
+
+        ## Map color selection
+        
         ## Execute maps
 
         dataSubset <-spatialData()[[1]]
@@ -200,7 +213,13 @@ shinyServer(function(input, output, session) {
             aggregationType <- "density"
         }
         ## Database logic choose scenario and comparison type
-        if(input$comparisonSelector ==1){
+        if(input$comparison == TRUE){
+            comparisonSelector <- input$comparisonSelectorDouble
+        }else{
+            comparisonSelector <- input$comparisonSelectorSingle
+        }
+            
+        if(comparisonSelector ==1){
             
             isComparison <-TRUE
             legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute, isComparison)
@@ -209,7 +228,7 @@ shinyServer(function(input, output, session) {
             
             groupedTable <- compareScenarios(originalDataSet, scenarioDataSet,attribute)  
             
-        } else if (input$comparisonSelector ==2){
+        } else if (comparisonSelector ==2){
             farbe <- "-RdBu"
             isComparison <-TRUE
             
