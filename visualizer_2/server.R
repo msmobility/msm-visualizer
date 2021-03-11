@@ -113,6 +113,7 @@ shinyServer(function(input, output, session) {
         print("Updating menu")
         updateVar <-input$update
         initialYear <- as.numeric(min(session$userData$o_popYea$year))
+        session$userData$initialYear <- initialYear
         finalYear <- as.numeric(max(session$userData$o_popYea$year))
         updateSliderInput(session, "year", min = initialYear, max = finalYear)
         
@@ -220,7 +221,7 @@ shinyServer(function(input, output, session) {
         }
             
         if(comparisonSelector ==1){
-            
+
             isComparison <-TRUE
             legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute, isComparison)
             originalDataSet <-prepareSiloMap(session$userData$o_spatialData, input$year, input$zoneAgg, attribute, aggregationType, global$zones)
@@ -229,11 +230,12 @@ shinyServer(function(input, output, session) {
             groupedTable <- compareScenarios(originalDataSet, scenarioDataSet,attribute)  
             
         } else if (comparisonSelector ==2){
+            
             farbe <- "-RdBu"
             isComparison <-TRUE
             
             legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute, isComparison)
-            originalDataSet <-prepareSiloMap(session$userData$o_spatialData, initialYear, input$zoneAgg, attribute, aggregationType, global$zones)
+            originalDataSet <-prepareSiloMap(session$userData$o_spatialData, session$userData$initialYear, input$zoneAgg, attribute, aggregationType, global$zones)
             scenarioDataSet <-prepareSiloMap(session$userData$o_spatialData, input$year, input$zoneAgg, attribute, aggregationType, global$zones)
             groupedTable <- compareScenarios(originalDataSet, scenarioDataSet,attribute)
             
