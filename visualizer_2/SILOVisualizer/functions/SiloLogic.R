@@ -213,14 +213,30 @@ siloAspatialEvents <- function(eventsTable, optionsVector){
   #original_sorted <- original[with(original, order(Year, Key)),]
   return(eventsTable)
 }
-siloAspatialRegions <- function(regionTable, varColumn){
+siloAspatialRegions <- function(regionTable, zonesData, varColumn){
+
+  ## Delete geometry and group area by zone
+  #zonesData$geometry <- NULL
+  #regionArea <- zonesData %>%select (shp_muni, shp_area) 
+  #regionArea <- zonesData %>%group_by(shp_muni) %>% summarise(area = sum(shp_area))
+  #print("region Area")
+  #print(regionArea)
+  #print("Region data ")
+  #print(regionTable)
+  ## left join data
+  #regionTable <- regionTable %>% left_join(regionArea, by = setNames(colnames(regionArea)[1], colnames(regionTable)[2]))
+  #print(varColumn)
+  #print("joined")
+  #print(regionTable)
 
 
   regionTable <- regionTable%>% group_by(year) %>% summarise(min = quantile(!!as.name(varColumn), probs = 0,na.rm=TRUE),
                                                              q1 = quantile (!!as.name(varColumn), probs = 0.25,na.rm=TRUE),
-                                                             q2 = quantile (!!as.name(varColumn), probs = 0.50,na.rm=TRUE),
+                                                             q2 = mean (!!as.name(varColumn),na.rm=TRUE),
                                                              q3 = quantile (!!as.name(varColumn), probs = 0.75,na.rm=TRUE),
                                                              max = quantile(!!as.name(varColumn), probs = 1,na.rm=TRUE),)
+  #print("Procesed table")
+  #print(regionTable)
   return(regionTable)
 }
 siloAspatialJobsReg <-function(regionTable){
@@ -231,7 +247,7 @@ siloAspatialJobsReg <-function(regionTable){
   )
   regionJobs <- regionJobs %>% group_by(year,key)%>%summarise(min = quantile(Value, probs = 0),
                                                               q1 = quantile(Value, probs = 0.25),
-                                                              q2 = quantile(Value, probs = 0.5),
+                                                              q2 = mean (Value, na.rm=TRUE),
                                                               q3 = quantile(Value, probs = 0.75),
                                                               max = quantile(Value, probs = 1))
   regionJobs <-regionJobs%>%rename(Year = year)

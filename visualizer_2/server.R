@@ -495,15 +495,15 @@ shinyServer(function(input, output, session) {
             if(input$regionalLevel == 'reAvCommDist'){
                 varColumn = 'minutes'
                 dataTable <- session$userData$o_regCoT
-                dataTable<- siloAspatialRegions(dataTable, varColumn)
+                dataTable<- siloAspatialRegions(dataTable, global$zones, varColumn)
             }else if(input$regionalLevel == 'reAvailableLand'){
                 varColumn = 'land'
                 dataTable <- session$userData$o_lanReg
-                dataTable<- siloAspatialRegions(dataTable, varColumn)
+                dataTable<- siloAspatialRegions(dataTable, global$zones, varColumn)
             }else if (input$regionalLevel == 'reTotalJobs'){
                 varColumn = 'total'
                 dataTable <- session$userData$o_regJoS
-                dataTable<- siloAspatialRegions(dataTable, varColumn)
+                dataTable<- siloAspatialRegions(dataTable, global$zones, varColumn)
             }else if(input$regionalLevel == 'reJobsSect'){
                 dataTable <- siloAspatialJobsReg(session$userData$o_regJoS)
             }

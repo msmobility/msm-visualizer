@@ -116,7 +116,7 @@ msmBands <-function(data, values){
     ymin = ~q1, 
     ymax = ~q3, 
     color = I("gray80"),
-    alpha = 0.3, name = 'q1-q3 bands') %>% add_trace(y = ~q2, name = 'Mean', type = 'scatter', mode = 'lines')
+    alpha = 0.3, name = 'q1-q3 bands') %>% add_trace(y = ~q2, name = 'Average', type = 'scatter', mode = 'lines')
 }
 msmAnimatedBands <- function(data){
   plot_ly(data(), x = ~Year, frame = ~Key)%>%
@@ -127,7 +127,7 @@ msmAnimatedBands <- function(data){
   #%>%
     add_trace(y = ~q1, name = "q1", type = 'scatter', mode = 'lines',color = ~as.factor(Key),
               line = list(simplify = F))%>%
-    add_trace(y = ~q2, name = "Mean", type = 'scatter', mode = 'lines',color = ~as.factor(Key),
+    add_trace(y = ~q2, name = "Average", type = 'scatter', mode = 'lines',color = ~as.factor(Key),
               line = list(simplify = F))%>%
     add_trace(y = ~q3, name = "q3", type = 'scatter', mode = 'lines',color = ~as.factor(Key),
               line = list(simplify = F))
