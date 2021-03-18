@@ -195,13 +195,13 @@ ui = dashboardPagePlus(
                 width = NULL,
                     fluidRow(column(12,
                         fluidRow(
-                            column (4, conditionalPanel(condition = "input.showClickPlot1 == true",
+                            column (4, conditionalPanel(condition = "input.showClickPlot1 == true && input.renderType == 'spatial' ",
                                 plotlyOutput("regCommPlot")    
                                 )),
-                            column (4, conditionalPanel(condition = "input.showClickPlot2 == true",
+                            column (4, conditionalPanel(condition = "input.showClickPlot2 == true && input.renderType == 'spatial'",
                                 plotlyOutput("avLandPlot")
                                 )),
-                            column (4, conditionalPanel(condition = "input.showClickPlot3 == true", 
+                            column (4, conditionalPanel(condition = "input.showClickPlot3 == true && input.renderType == 'spatial'", 
                                 plotlyOutput("jobsBySectorPlot")
                                 )))))
             ))
