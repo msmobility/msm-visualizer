@@ -55,12 +55,32 @@ shinyServer(function(input, output, session) {
                     varName <-paste('o',varName, sep='_')
                     # Store databases in session$userData, each database starts with o_ + values found in fileNames
                     session$userData[[varName]] <- read.csv(paste(global$datapath,fileList[j],sep="/", collapse = NULL))
+                    ## Reset click on region filter
+                    if(i == "regionAvCommutingTime.csv"){
+                        updateCheckboxInput(session, "showClickPlot1", value = TRUE)
+                    }else if (i == "regionAvailableLand.csv"){
+                        updateCheckboxInput(session, "showClickPlot2", value = TRUE)
+                    }else if (i == "jobsBySectorAndRegion.csv"){
+                        updateCheckboxInput(session, "showClickPlot3", value = TRUE)
+                    }
                 }else{
                     print(paste("Warning , ",filePath, " does not exists in this scenario, dependent plots will be hidden"))
                     ## Here, pending to chose a modify options from vectors :
                     session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_1 != fileList[j] | is.na(required_file_1))
                     session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_2 != fileList[j] | is.na(required_file_2))
                     session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_3 != fileList[j]| is.na(required_file_3))
+                    ## Set click on region filters
+                    if(i == "regionAvCommutingTime.csv"){
+                        updateCheckboxInput(session, "showClickPlot1", value = FALSE)
+                        print("No database for commuting time, click on region plot will be disabled")
+                        session$userData$clickAvCommuting <- FALSE
+                    }else if (i == "regionAvailableLand.csv"){
+                        updateCheckboxInput(session, "showClickPlot2", value = FALSE)
+                        print("No database for available land, click on region plot will be disabled")
+                    }else if (i == "jobsBySectorAndRegion.csv"){
+                        updateCheckboxInput(session, "showClickPlot3", value = FALSE)
+                        print("No database for jobs by region and sector, click on region plot will be disabled")
+                    }
                 }
                 j=j+1
             }
@@ -95,6 +115,18 @@ shinyServer(function(input, output, session) {
                     session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_1 != fileList[j] | is.na(required_file_1))
                     session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_2 != fileList[j] | is.na(required_file_2))
                     session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_3 != fileList[j]| is.na(required_file_3))
+                    ## Set click on region filters
+                    if(l == "regionAvCommutingTime.csv"){
+                        updateCheckboxInput(session, "showClickPlot1", value = FALSE)
+                        print("No database for commuting time, click on region plot will be disabled")
+                        session$userData$clickAvCommuting <- FALSE
+                    }else if (l == "regionAvailableLand.csv"){
+                        updateCheckboxInput(session, "showClickPlot2", value = FALSE)
+                        print("No database for available land, click on region plot will be disabled")
+                    }else if (l == "jobsBySectorAndRegion.csv"){
+                        updateCheckboxInput(session, "showClickPlot3", value = FALSE)
+                        print("No database for jobs by region and sector, click on region plot will be disabled")
+                    }
                 }
                 j=j+1
             }
@@ -152,7 +184,7 @@ shinyServer(function(input, output, session) {
     })
     ## Dummy function to trigger maps
     dummyfunc <-eventReactive(input$update, {dummycall(1)})
-    
+
     ## Plot Map
     output$siloMap <- renderLeaflet({
         n <-dummyfunc()
@@ -630,7 +662,7 @@ shinyServer(function(input, output, session) {
         fig()
     )
     output$regCommPlot <-renderPlotly(
-        figReg1()
+        figReg1() 
     )
     output$avLandPlot <- renderPlotly(
         figReg2()

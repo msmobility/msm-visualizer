@@ -152,7 +152,16 @@ ui = dashboardPagePlus(
                                                           "No comparison" = 3), selected = 3),
                               conditionalPanel("input.comparisonSelectorSingle ==3",
                                                radioButtons("ScenarioSelectorSingle", h4("Selected Scenario"),
-                                                            choices = list("Scenario 1" = 1), selected =1)))
+                                                            choices = list("Scenario 1" = 1), selected =1))),
+             # Virtual panel to show / hide when data is not available
+             conditionalPanel(condition = " 5 == 3",
+                              checkboxInput("showClickPlot1", "Show click plot 1", value = TRUE),
+             
+                              checkboxInput("showClickPlot2", "Show click plot 2", TRUE),
+                              
+                              checkboxInput("showClickPlot3", "Show click plot 3", TRUE),
+
+                              )
              
              #shinyDirButton("dir", "Base scenario folder","Select directory"),
              #checkboxInput("comparison","Compare scenarios", value=FALSE),
@@ -186,9 +195,15 @@ ui = dashboardPagePlus(
                 width = NULL,
                     fluidRow(column(12,
                         fluidRow(
-                            column (4, plotlyOutput("regCommPlot")),
-                            column (4, plotlyOutput("avLandPlot")),
-                            column (4, plotlyOutput("jobsBySectorPlot")))))
+                            column (4, conditionalPanel(condition = "input.showClickPlot1 == true",
+                                plotlyOutput("regCommPlot")    
+                                )),
+                            column (4, conditionalPanel(condition = "input.showClickPlot2 == true",
+                                plotlyOutput("avLandPlot")
+                                )),
+                            column (4, conditionalPanel(condition = "input.showClickPlot3 == true", 
+                                plotlyOutput("jobsBySectorPlot")
+                                )))))
             ))
     ),
 ########################## Right sidebar ##########################
