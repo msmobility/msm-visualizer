@@ -103,15 +103,7 @@ ui = dashboardPagePlus(
                     conditionalPanel("input.zoneAgg == 'aggregated'",
                         checkboxInput("enable_regions","Enable click on region plots", value = FALSE)),
                     ## View growth
-                    
-                    #conditionalPanel("input.comparison == true",
-                    #    radioButtons("comparisonSelector", h4("Select type of comparison"),
-                    #        choices = list("Compare scenarios" = 1,
-                    #        "Base year comparison"= 2,
-                    #        "No comparison" = 3), selected = 3),
-                    #    conditionalPanel("input.comparisonSelector == 3",
-                    #    radioButtons("scenarioSelector", h4("Select map scenario"),
-                    #        choices = list("Scenario 1" = 1, "Scenario 2" = 2), selected = 1))),
+
                     numericInput("siloMapCategories", h4("Enter number of categories"), 7, 3, 15, 1),
                     radioButtons("siloMapStyle", h4("Select classification style"), c("pretty", "equal", "quantile"), inline = TRUE)
                     )
@@ -160,14 +152,7 @@ ui = dashboardPagePlus(
                               checkboxInput("showClickPlot2", "Show click plot 2", TRUE),
                               
                               checkboxInput("showClickPlot3", "Show click plot 3", TRUE),
-
                               )
-             
-             #shinyDirButton("dir", "Base scenario folder","Select directory"),
-             #checkboxInput("comparison","Compare scenarios", value=FALSE),
-             #conditionalPanel( "input.comparison == true",
-             #                  shinyDirButton("dir2","Alternative scenario folder", "Select directory")),
-             #actionButton("update","Update")
          )
         )
     ),

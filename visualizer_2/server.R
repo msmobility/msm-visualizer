@@ -629,16 +629,7 @@ shinyServer(function(input, output, session) {
         }
         ### Here, the labels will be implemented
         fig <- generateLabels(fig, "siloAspatial", input)
-        ### Send to function
-        #fig <-fig %>% layout(
-        #    title ="Test title",
-        #    scene = list(
-        #        xaxis =list(title ="Year"),
-        #        yaxis =list(title ="Advance")
-        #    ),
-        #    legend = list(title = list(text = "<b>Legend</b>"))
-        #)
-        ### END
+
         
         return(fig)
     })
