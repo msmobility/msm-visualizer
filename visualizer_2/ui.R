@@ -143,7 +143,7 @@ ui = dashboardPagePlus(
                                            choices = list("Compare scenarios" = 1,
                                                           "Base year comparison"= 2,
                                                           "No comparison" = 3), selected = 3),
-                              conditionalPanel("input.comparisonSelectorDouble == 3",
+                              conditionalPanel("input.comparisonSelectorDouble >= 2",
                                                radioButtons("scenarioSelector", h4("Select map scenario"),
                                                             choices = list("Scenario 1" = 1, "Scenario 2" = 2), selected = 1))),
              conditionalPanel("input.comparison == false",

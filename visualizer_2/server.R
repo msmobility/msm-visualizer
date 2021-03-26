@@ -267,10 +267,16 @@ shinyServer(function(input, output, session) {
             isComparison <-TRUE
             
             legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute, isComparison)
-            originalDataSet <-prepareSiloMap(session$userData$o_spatialData, session$userData$initialYear, input$zoneAgg, attribute, aggregationType, global$zones)
-            scenarioDataSet <-prepareSiloMap(session$userData$o_spatialData, input$year, input$zoneAgg, attribute, aggregationType, global$zones)
-            groupedTable <- compareScenarios(originalDataSet, scenarioDataSet,attribute)
-            
+            ## Set here conditions based on select scenario (pending)
+            if(input$scenarioSelector == 1){
+                originalDataSet <-prepareSiloMap(session$userData$o_spatialData, session$userData$initialYear, input$zoneAgg, attribute, aggregationType, global$zones)
+                scenarioDataSet <-prepareSiloMap(session$userData$o_spatialData, input$year, input$zoneAgg, attribute, aggregationType, global$zones)
+                groupedTable <- compareScenarios(originalDataSet, scenarioDataSet,attribute)
+            }else{
+                originalDataSet <-prepareSiloMap(session$userData$c_spatialData, session$userData$initialYear, input$zoneAgg, attribute, aggregationType, global$zones)
+                scenarioDataSet <-prepareSiloMap(session$userData$c_spatialData, input$year, input$zoneAgg, attribute, aggregationType, global$zones)
+                groupedTable <- compareScenarios(originalDataSet, scenarioDataSet,attribute)
+            }
         } else {
             if(input$scenarioSelector == 1){
                 spatialDataSet <-session$userData$o_spatialData
