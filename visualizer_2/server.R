@@ -55,12 +55,32 @@ shinyServer(function(input, output, session) {
                     varName <-paste('o',varName, sep='_')
                     # Store databases in session$userData, each database starts with o_ + values found in fileNames
                     session$userData[[varName]] <- read.csv(paste(global$datapath,fileList[j],sep="/", collapse = NULL))
+                    ## Reset click on region filter
+                    if(i == "regionAvCommutingTime.csv"){
+                        updateCheckboxInput(session, "showClickPlot1", value = TRUE)
+                    }else if (i == "regionAvailableLand.csv"){
+                        updateCheckboxInput(session, "showClickPlot2", value = TRUE)
+                    }else if (i == "jobsBySectorAndRegion.csv"){
+                        updateCheckboxInput(session, "showClickPlot3", value = TRUE)
+                    }
                 }else{
                     print(paste("Warning , ",filePath, " does not exists in this scenario, dependent plots will be hidden"))
                     ## Here, pending to chose a modify options from vectors :
                     session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_1 != fileList[j] | is.na(required_file_1))
                     session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_2 != fileList[j] | is.na(required_file_2))
                     session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_3 != fileList[j]| is.na(required_file_3))
+                    ## Set click on region filters
+                    if(i == "regionAvCommutingTime.csv"){
+                        updateCheckboxInput(session, "showClickPlot1", value = FALSE)
+                        print("No database for commuting time, click on region plot will be disabled")
+                        session$userData$clickAvCommuting <- FALSE
+                    }else if (i == "regionAvailableLand.csv"){
+                        updateCheckboxInput(session, "showClickPlot2", value = FALSE)
+                        print("No database for available land, click on region plot will be disabled")
+                    }else if (i == "jobsBySectorAndRegion.csv"){
+                        updateCheckboxInput(session, "showClickPlot3", value = FALSE)
+                        print("No database for jobs by region and sector, click on region plot will be disabled")
+                    }
                 }
                 j=j+1
             }
@@ -95,6 +115,18 @@ shinyServer(function(input, output, session) {
                     session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_1 != fileList[j] | is.na(required_file_1))
                     session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_2 != fileList[j] | is.na(required_file_2))
                     session$userData$menuSettings <- filter(session$userData$menuSettings, required_file_3 != fileList[j]| is.na(required_file_3))
+                    ## Set click on region filters
+                    if(l == "regionAvCommutingTime.csv"){
+                        updateCheckboxInput(session, "showClickPlot1", value = FALSE)
+                        print("No database for commuting time, click on region plot will be disabled")
+                        session$userData$clickAvCommuting <- FALSE
+                    }else if (l == "regionAvailableLand.csv"){
+                        updateCheckboxInput(session, "showClickPlot2", value = FALSE)
+                        print("No database for available land, click on region plot will be disabled")
+                    }else if (l == "jobsBySectorAndRegion.csv"){
+                        updateCheckboxInput(session, "showClickPlot3", value = FALSE)
+                        print("No database for jobs by region and sector, click on region plot will be disabled")
+                    }
                 }
                 j=j+1
             }
@@ -113,6 +145,7 @@ shinyServer(function(input, output, session) {
         print("Updating menu")
         updateVar <-input$update
         initialYear <- as.numeric(min(session$userData$o_popYea$year))
+        session$userData$initialYear <- initialYear
         finalYear <- as.numeric(max(session$userData$o_popYea$year))
         updateSliderInput(session, "year", min = initialYear, max = finalYear)
         
@@ -151,23 +184,36 @@ shinyServer(function(input, output, session) {
     })
     ## Dummy function to trigger maps
     dummyfunc <-eventReactive(input$update, {dummycall(1)})
-    
+
     ## Plot Map
     output$siloMap <- renderLeaflet({
-        #print(input$update)
         n <-dummyfunc()
-        
-        ## Map color selection
-        if(input$comparisonSelector ==1){
-            farbe <- "-RdBu"
-        } else if (input$comparisonSelector ==2){
-            farbe <- "-RdBu"
-        } else {
-            if(input$scenarioSelector == 1){
+        ## Select color
+        ## Identify type of process (1 scenario / 2 scenarios)
+        if(input$comparison == TRUE){
+            if(input$comparisonSelectorDouble ==1){
+                farbe <- "-RdBu" 
+            } else if (input$comparisonSelectorDouble ==2){
+                farbe <- "-RdBu"
             } else {
+                if(input$scenarioSelector == 1){
+                } else {
+                }
+                farbe <- "YlOrBr"
+            }    
+        }else{
+            if(input$comparisonSelectorSingle ==2){
+                farbe <- "-RdBu" 
+            } else {
+                if(input$scenarioSelector == 1){
+                } else {
+                }
+                farbe <- "YlOrBr"
             }
-            farbe <- "YlOrBr"
         }
+
+        ## Map color selection
+        
         ## Execute maps
 
         dataSubset <-spatialData()[[1]]
@@ -200,8 +246,14 @@ shinyServer(function(input, output, session) {
             aggregationType <- "density"
         }
         ## Database logic choose scenario and comparison type
-        if(input$comparisonSelector ==1){
+        if(input$comparison == TRUE){
+            comparisonSelector <- input$comparisonSelectorDouble
+        }else{
+            comparisonSelector <- input$comparisonSelectorSingle
+        }
             
+        if(comparisonSelector ==1){
+
             isComparison <-TRUE
             legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute, isComparison)
             originalDataSet <-prepareSiloMap(session$userData$o_spatialData, input$year, input$zoneAgg, attribute, aggregationType, global$zones)
@@ -209,15 +261,22 @@ shinyServer(function(input, output, session) {
             
             groupedTable <- compareScenarios(originalDataSet, scenarioDataSet,attribute)  
             
-        } else if (input$comparisonSelector ==2){
+        } else if (comparisonSelector ==2){
+            
             farbe <- "-RdBu"
             isComparison <-TRUE
             
             legend <- prepareSiloMapLabels(myLabels, "siloSpatial", attribute, isComparison)
-            originalDataSet <-prepareSiloMap(session$userData$o_spatialData, initialYear, input$zoneAgg, attribute, aggregationType, global$zones)
-            scenarioDataSet <-prepareSiloMap(session$userData$o_spatialData, input$year, input$zoneAgg, attribute, aggregationType, global$zones)
-            groupedTable <- compareScenarios(originalDataSet, scenarioDataSet,attribute)
-            
+            ## Set here conditions based on select scenario (pending)
+            if(input$scenarioSelector == 1){
+                originalDataSet <-prepareSiloMap(session$userData$o_spatialData, session$userData$initialYear, input$zoneAgg, attribute, aggregationType, global$zones)
+                scenarioDataSet <-prepareSiloMap(session$userData$o_spatialData, input$year, input$zoneAgg, attribute, aggregationType, global$zones)
+                groupedTable <- compareScenarios(originalDataSet, scenarioDataSet,attribute)
+            }else{
+                originalDataSet <-prepareSiloMap(session$userData$c_spatialData, session$userData$initialYear, input$zoneAgg, attribute, aggregationType, global$zones)
+                scenarioDataSet <-prepareSiloMap(session$userData$c_spatialData, input$year, input$zoneAgg, attribute, aggregationType, global$zones)
+                groupedTable <- compareScenarios(originalDataSet, scenarioDataSet,attribute)
+            }
         } else {
             if(input$scenarioSelector == 1){
                 spatialDataSet <-session$userData$o_spatialData
@@ -442,15 +501,15 @@ shinyServer(function(input, output, session) {
             if(input$regionalLevel == 'reAvCommDist'){
                 varColumn = 'minutes'
                 dataTable <- session$userData$o_regCoT
-                dataTable<- siloAspatialRegions(dataTable, varColumn)
+                dataTable<- siloAspatialRegions(dataTable, global$zones, varColumn)
             }else if(input$regionalLevel == 'reAvailableLand'){
                 varColumn = 'land'
                 dataTable <- session$userData$o_lanReg
-                dataTable<- siloAspatialRegions(dataTable, varColumn)
+                dataTable<- siloAspatialRegions(dataTable, global$zones, varColumn)
             }else if (input$regionalLevel == 'reTotalJobs'){
                 varColumn = 'total'
                 dataTable <- session$userData$o_regJoS
-                dataTable<- siloAspatialRegions(dataTable, varColumn)
+                dataTable<- siloAspatialRegions(dataTable, global$zones, varColumn)
             }else if(input$regionalLevel == 'reJobsSect'){
                 dataTable <- siloAspatialJobsReg(session$userData$o_regJoS)
             }
@@ -570,16 +629,7 @@ shinyServer(function(input, output, session) {
         }
         ### Here, the labels will be implemented
         fig <- generateLabels(fig, "siloAspatial", input)
-        ### Send to function
-        #fig <-fig %>% layout(
-        #    title ="Test title",
-        #    scene = list(
-        #        xaxis =list(title ="Year"),
-        #        yaxis =list(title ="Advance")
-        #    ),
-        #    legend = list(title = list(text = "<b>Legend</b>"))
-        #)
-        ### END
+
         
         return(fig)
     })
@@ -609,7 +659,7 @@ shinyServer(function(input, output, session) {
         fig()
     )
     output$regCommPlot <-renderPlotly(
-        figReg1()
+        figReg1() 
     )
     output$avLandPlot <- renderPlotly(
         figReg2()

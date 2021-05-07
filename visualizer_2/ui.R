@@ -78,7 +78,7 @@ ui = dashboardPagePlus(
              conditionalPanel("input.renderType == 'spatial'",
                 ## Time horizon 
                 sliderInput(inputId = "year",label = h4("Select Year"),
-                    value = 2020, min = initialYear, max = finalYear),
+                    value = initialYear, min = initialYear, max = finalYear),
                 ## Year selection
                 radioButtons("zoneAgg", "Select zone aggregation", 
                     choices = c("Dissagregated" = "dissagregated","Aggregated" = "aggregated") , selected = "aggregated"),
@@ -103,14 +103,7 @@ ui = dashboardPagePlus(
                     conditionalPanel("input.zoneAgg == 'aggregated'",
                         checkboxInput("enable_regions","Enable click on region plots", value = FALSE)),
                     ## View growth
-                    conditionalPanel("input.comparison == true",
-                        radioButtons("comparisonSelector", h4("Select type of comparison"),
-                            choices = list("Compare scenarios" = 1,
-                            "Base year comparison"= 2,
-                            "No comparison" = 3), selected = 3),
-                        conditionalPanel("input.comparisonSelector == 3",
-                        radioButtons("scenarioSelector", h4("Select map scenario"),
-                            choices = list("Scenario 1" = 1, "Scenario 2" = 2), selected = 1))),
+
                     numericInput("siloMapCategories", h4("Enter number of categories"), 7, 3, 15, 1),
                     radioButtons("siloMapStyle", h4("Select classification style"), c("pretty", "equal", "quantile"), inline = TRUE)
                     )
@@ -132,7 +125,35 @@ ui = dashboardPagePlus(
                     conditionalPanel("input.aspatialLevel == 'events'",
                         selectInput("eventsLevel", "Select dwelling level", (aEvent)))
                 )
-            )
+            ),
+         menuItem(
+             text = "Comparison parameters",
+             tabName = "comparisons",
+             icon = icon("balance-scale-right"),
+             conditionalPanel("input.comparison == true",
+                              radioButtons("comparisonSelectorDouble", h4("Select type of comparison"),
+                                           choices = list("Compare scenarios" = 1,
+                                                          "Base year comparison"= 2,
+                                                          "No comparison" = 3), selected = 3),
+                              conditionalPanel("input.comparisonSelectorDouble >= 2",
+                                               radioButtons("scenarioSelector", h4("Select map scenario"),
+                                                            choices = list("Scenario 1" = 1, "Scenario 2" = 2), selected = 1))),
+             conditionalPanel("input.comparison == false",
+                              radioButtons("comparisonSelectorSingle", h4("Select comparison"),
+                                           choices = list("Base year comparison" = 2,
+                                                          "No comparison" = 3), selected = 3),
+                              conditionalPanel("input.comparisonSelectorSingle ==3",
+                                               radioButtons("ScenarioSelectorSingle", h4("Selected Scenario"),
+                                                            choices = list("Scenario 1" = 1), selected =1))),
+             # Virtual panel to show / hide when data is not available
+             conditionalPanel(condition = " 5 == 3",
+                              checkboxInput("showClickPlot1", "Show click plot 1", value = TRUE),
+             
+                              checkboxInput("showClickPlot2", "Show click plot 2", TRUE),
+                              
+                              checkboxInput("showClickPlot3", "Show click plot 3", TRUE),
+                              )
+         )
         )
     ),
 ########################## Body ##########################
@@ -159,9 +180,15 @@ ui = dashboardPagePlus(
                 width = NULL,
                     fluidRow(column(12,
                         fluidRow(
-                            column (4, plotlyOutput("regCommPlot")),
-                            column (4, plotlyOutput("avLandPlot")),
-                            column (4, plotlyOutput("jobsBySectorPlot")))))
+                            column (4, conditionalPanel(condition = "input.showClickPlot1 == true && input.renderType == 'spatial' ",
+                                plotlyOutput("regCommPlot")    
+                                )),
+                            column (4, conditionalPanel(condition = "input.showClickPlot2 == true && input.renderType == 'spatial'",
+                                plotlyOutput("avLandPlot")
+                                )),
+                            column (4, conditionalPanel(condition = "input.showClickPlot3 == true && input.renderType == 'spatial'", 
+                                plotlyOutput("jobsBySectorPlot")
+                                )))))
             ))
     ),
 ########################## Right sidebar ##########################
