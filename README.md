@@ -61,6 +61,6 @@ This visualizer works with the new SILO output style, even though not all the ta
 Please check the examples to get details about the data structure.
 ## Recommendations
 If you want to use the scenario tool, make sure to have the same .csv file types in each scenario and also have the same time horizon. 
-## What if i need help?
+## What if I need help?
 
 Please contact Rafael Muñoz by slack (Rafael Muñoz) or email: rafael.nieto@tum.de. He will contact you as soon as possible.
