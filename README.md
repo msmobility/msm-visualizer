@@ -5,7 +5,16 @@ R and shiny based tool to visualize results produced by the integrated land-use/
 ## Technical requirements
 
 At least R 3.6.1 is required to install the packages and run the tool
+Install all the latest versions of the packages (Except ShinyDashboardPlus)
 
+### Warning regarding ShinyDashboardPlus package
+
+Due to an extensive update of ShinyDashboardPlus package, it is necessary to install the 0.7.5 version
+
+You can install it using the next command
+```
+install.packages("http://cran.salud.gob.sv/src/contrib/00Archive/shinydashboardPlus/shinydashboardPlus_0.7.5.tar.gz", repo=NULL, type="source")
+```
 ## Main functions
 
 Visualize spatial and aspatial model variables and compare scenarios. The zone-related variables can be visualized using the "click on map" function. The scenarios can be changed in order to compare different scenarios.
