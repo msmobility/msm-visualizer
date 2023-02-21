@@ -42,17 +42,14 @@ showRegionalPlots <-TRUE
 
 ########################## Header ##########################
 
-ui = dashboardPagePlus( 
-    dashboardHeaderPlus(
-        title = tagList(
-            span(class = "logo-lg", "SILO Visualizer 2.0"),
-            img(icon("city"))),
-        enable_rightsidebar = TRUE,
-        rightSidebarIcon = "table"
-        ),
+ui = dashboardPage( 
+  header = dashboardHeader(
+    title = tagList(span(class = "logo-lg", "SILO Visualizer 2.0"),
+                    img(icon("city")))
+  ),
 ########################## Sidebar ##########################
 
-    dashboardSidebar( width = 300,
+sidebar = dashboardSidebar( width = 300,
      sidebarMenu(
          menuItem(
             text = "Select scenarios",
@@ -157,9 +154,9 @@ ui = dashboardPagePlus(
         )
     ),
 ########################## Body ##########################
-    dashboardBody(
+body =dashboardBody(
         fluidRow(
-            boxPlus(
+            box(
                 closable = FALSE,
                 status = "primary",
                 width = 12,
@@ -172,7 +169,7 @@ ui = dashboardPagePlus(
                 )
             ),
         conditionalPanel(condition = "input.enable_regions == 1 && input.zoneAgg == 'aggregated'",
-            boxPlus(
+            box(
                 title = ("SILO Regional plots"),
                 closable = FALSE,
                 status = "primary",
@@ -192,21 +189,23 @@ ui = dashboardPagePlus(
             ))
     ),
 ########################## Right sidebar ##########################
-    rightsidebar = rightSidebar(
-        background = "light",
-        width = 450,
-        rightSidebarTabContent(
-            id =1, 
-            active = TRUE,
-            conditionalPanel(condition = "input.renderType == 'spatial'",
-                dataTableOutput('gisTable'),
-                downloadButton("downloadData", "Download .csv"),
-                downloadButton("downloadShape", "Download GeoJSON (to be implemented)")
-                ),
-            conditionalPanel(condition = "input.renderType == 'aspatial'",
-                dataTableOutput('aspatialTable'),
-                downloadButton("downloadAspatialData", "Download .csv")
-                )
-        )
+controlbar = dashboardControlbar(
+  disable = FALSE,
+  controlbarIcon = "table",
+  background = "light",
+  width = 450,
+  controlbarItem(
+    id =1, 
+    active = TRUE,
+    conditionalPanel(condition = "input.renderType == 'spatial'",
+                     dataTableOutput('gisTable'),
+                     downloadButton("downloadData", "Download .csv"),
+                     downloadButton("downloadShape", "Download GeoJSON (to be implemented)")
+    ),
+    conditionalPanel(condition = "input.renderType == 'aspatial'",
+                     dataTableOutput('aspatialTable'),
+                     downloadButton("downloadAspatialData", "Download .csv")
     )
+  )
+)
 )
